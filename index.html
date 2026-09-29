@@ -1,0 +1,1631 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MakerPort — Bedarfsanalyse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,300;0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#001f3d;         /* brand deep navy (body/headline text) */
+    --paper:#F5F8FA;       /* canvas gray — unchanged */
+    --card:#FFFFFF;
+    --line:#CBD6E2;        /* border gray — unchanged */
+    --muted:#516F90;       /* muted text — unchanged */
+    --orange:#00abbe;      /* brand cyan — Privatpersonen */
+    --orange-dark:#00879a;
+    --teal:#e50066;        /* brand magenta — Unternehmen & Selbstständige */
+    --teal-dark:#b80052;
+    --indigo:#1a3a6c;      /* brand navy — Angestellte & Fachkräfte */
+    --indigo-dark:#122a4f;
+    --highlight:#fff379;   /* brand yellow — small accent touches only (dark text on top) */
+    --accent: var(--orange);
+    --accent-dark: var(--orange-dark);
+    --accent-soft:#E0F7FA;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Titillium Web',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    overflow-x:hidden;
+    padding-top:env(safe-area-inset-top, 0px);
+    padding-left:env(safe-area-inset-left, 0px);
+    padding-right:env(safe-area-inset-right, 0px);
+  }
+
+  #app{
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 32px 20px 40px;
+    width:100%;
+    flex:1 0 auto;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* ---------- Footer ---------- */
+  .site-footer{
+    flex:none;
+    border-top:1px solid var(--line);
+    padding:20px 20px 28px;
+    text-align:center;
+  }
+  .footer-links{
+    font-size:0.8rem;
+    margin-bottom:6px;
+  }
+  .footer-links a{
+    color:var(--muted);
+    text-decoration:none;
+    background:none;
+    border:none;
+    cursor:pointer;
+    font:inherit;
+    padding:0;
+  }
+  .footer-links a:hover{ color:var(--ink); text-decoration:underline; }
+  .footer-sep{ color:var(--line); margin:0 8px; }
+  .footer-meta{
+    font-size:0.75rem;
+    color:var(--line);
+  }
+
+  /* ---------- Legal popup (Impressum etc.) ---------- */
+  .modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,31,61,0.55);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:1000;
+  }
+  .modal-overlay[hidden]{ display:none; }
+  .modal-box{
+    background:var(--card);
+    border-radius:8px;
+    max-width:640px;
+    width:100%;
+    max-height:85vh;
+    overflow-y:auto;
+    padding:36px 32px;
+    position:relative;
+    box-shadow:0 20px 50px rgba(0,31,61,0.25);
+  }
+  @media (max-width:600px){ .modal-box{ padding:26px 20px; } }
+  .modal-close{
+    position:absolute;
+    top:14px; right:14px;
+    width:32px; height:32px;
+    border-radius:50%;
+    border:none;
+    background:var(--paper);
+    color:var(--ink);
+    font-size:1.25rem;
+    line-height:1;
+    cursor:pointer;
+  }
+  .modal-close:hover{ background:var(--line); }
+  .modal-close:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  .modal-content h2{
+    font-family:'Titillium Web', sans-serif;
+    font-size:1.4rem;
+    font-weight:700;
+    margin:0 0 14px;
+    color:var(--ink);
+    padding-right:28px;
+  }
+  .modal-content h3{
+    font-family:'Titillium Web', sans-serif;
+    font-size:0.98rem;
+    font-weight:600;
+    margin:22px 0 8px;
+    color:var(--ink);
+  }
+  .modal-content p{
+    font-size:0.9rem;
+    line-height:1.6;
+    color:var(--ink);
+    margin:0 0 4px;
+  }
+  .modal-content a{ color:var(--orange); }
+  .modal-content a:hover{ text-decoration:none; }
+  .modal-content .modal-stand{
+    margin-top:24px;
+    font-size:0.8rem;
+    color:var(--muted);
+    font-style:italic;
+  }
+
+  /* ---------- Cookie banner ---------- */
+  .cookie-banner{
+    position:fixed;
+    left:0; right:0; bottom:0;
+    z-index:900;
+    background:var(--card);
+    border-top:1px solid var(--line);
+    box-shadow:0 -6px 20px rgba(0,31,61,0.10);
+    padding:18px 20px;
+    padding-bottom:calc(18px + env(safe-area-inset-bottom, 0px));
+  }
+  .cookie-banner[hidden]{ display:none; }
+  .cookie-inner{
+    max-width:800px;
+    margin:0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:24px;
+    flex-wrap:wrap;
+  }
+  .cookie-text{
+    font-size:0.86rem;
+    line-height:1.5;
+    color:var(--ink);
+    flex:1;
+    min-width:240px;
+  }
+  .cookie-text a{
+    color:var(--orange);
+    font-weight:600;
+    text-decoration:none;
+    background:none;
+    border:none;
+    cursor:pointer;
+    font-size:inherit;
+    padding:0;
+  }
+  .cookie-text a:hover{ text-decoration:underline; }
+  .cookie-actions{ flex:none; display:flex; gap:10px; flex-wrap:wrap; }
+  .cookie-accept{
+    font-family:'Titillium Web', sans-serif;
+    font-size:0.88rem;
+    font-weight:600;
+    border:none;
+    cursor:pointer;
+    padding:11px 26px;
+    border-radius:4px;
+    background:var(--accent);
+    color:#fff;
+    transition: background-color 0.12s ease;
+  }
+  .cookie-accept:hover{ background:var(--accent-dark); }
+  .cookie-accept:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; }
+  .cookie-necessary{
+    font-family:'Titillium Web', sans-serif;
+    font-size:0.88rem;
+    font-weight:600;
+    border:1.5px solid var(--line);
+    cursor:pointer;
+    padding:11px 22px;
+    border-radius:4px;
+    background:var(--card);
+    color:var(--ink);
+    transition: border-color 0.12s ease;
+  }
+  .cookie-necessary:hover{ border-color:var(--accent); }
+  .cookie-necessary:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; }
+  @media (max-width:600px){
+    .cookie-inner{ flex-direction:column; align-items:stretch; gap:14px; }
+    .cookie-actions{ flex-direction:column; }
+    .cookie-accept, .cookie-necessary{ width:100%; }
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding-bottom:20px;
+    margin-bottom:28px;
+  }
+  .wordmark{
+    display:inline-flex;
+    align-items:center;
+    background:none;
+    border:none;
+    padding:0;
+    cursor:pointer;
+    line-height:0;
+  }
+  .wordmark:hover{ opacity:0.8; }
+  .wordmark:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
+  .wordmark-logo{ height:52px; width:auto; display:block; }
+  @media (max-width:700px){ .wordmark-logo{ height:44px; } }
+  @media (max-width:460px){ .wordmark-logo{ height:38px; } }
+  .kicker{
+    font-size:0.8rem;
+    color:var(--ink);
+    font-weight:600;
+    background:var(--highlight);
+    border:none;
+    border-radius:12px;
+    padding:4px 12px;
+    white-space:nowrap;
+  }
+
+  /* ---------- Intro ---------- */
+  .hero-question{
+    font-family:'Titillium Web', sans-serif;
+    font-size:2rem;
+    line-height:1.3;
+    font-weight:600;
+    max-width: 26ch;
+    margin:0 0 28px;
+    animation: fade-in 0.45s ease both;
+    letter-spacing:-0.01em;
+  }
+  @keyframes fade-in{
+    from{ opacity:0; }
+    to{ opacity:1; }
+  }
+  .paths{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap:12px;
+  }
+  .path-card{
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:var(--card);
+    box-shadow: 0 1px 2px rgba(33,49,74,0.06);
+    padding:24px 18px;
+    cursor:pointer;
+    text-align:left;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+    font-family:inherit;
+    color:inherit;
+    min-width:0;
+  }
+  .path-card:hover, .path-card:focus-visible{
+    box-shadow: 0 4px 12px rgba(33,49,74,0.10);
+    border-color: var(--role-accent);
+    outline:none;
+  }
+  .path-card:focus-visible{ box-shadow: 0 0 0 3px rgba(255,122,89,0.3); }
+  .path-icon{
+    width:34px; height:34px;
+    border-radius:8px;
+    display:flex; align-items:center; justify-content:center;
+    color:#fff;
+    background: var(--role-accent);
+    flex:none;
+  }
+  .path-icon svg{ display:block; width:18px; height:18px; }
+  .path-title{
+    font-family:'Titillium Web', sans-serif;
+    font-size:1.05rem;
+    font-weight:600;
+    line-height:1.3;
+  }
+  .path-desc{
+    font-size:0.85rem;
+    color:var(--muted);
+    line-height:1.5;
+  }
+  .path-cta{
+    font-family:'Titillium Web', sans-serif;
+    font-size:0.8rem;
+    font-weight:600;
+    margin-top:auto;
+    padding-top:6px;
+    color: var(--role-accent);
+  }
+  @media (max-width:700px){
+    .hero-question{ font-size:1.4rem; }
+    .path-card{ padding:16px 12px; gap:8px; }
+    .path-title{ font-size:0.88rem; }
+    .path-desc{ display:none; }
+    .path-cta{ font-size:0.72rem; }
+    .path-icon{ width:26px; height:26px; border-radius:6px; }
+    .path-icon svg{ width:14px; height:14px; }
+    .paths{ gap:8px; }
+  }
+  @media (max-width:460px){
+    .path-title{ font-size:0.76rem; }
+    .path-card{ padding:12px 8px; }
+  }
+
+  /* ---------- Progress rail ---------- */
+  .rail-wrap{ margin-bottom:24px; }
+  .rail-meta{
+    display:flex;
+    justify-content:space-between;
+    font-size:0.8rem;
+    color:var(--muted);
+    margin-bottom:10px;
+    font-weight:500;
+  }
+  .rail-meta strong{ color:var(--ink); font-weight:600; }
+  .rail{
+    position:relative;
+    height:6px;
+    background:var(--line);
+    border-radius:999px;
+    overflow:hidden;
+  }
+  .rail-fill{
+    position:absolute;
+    top:0; left:0; height:100%;
+    background:var(--accent);
+    border-radius:999px;
+    transition: width 0.35s ease;
+  }
+  .rail-ticks{
+    display:flex;
+    justify-content:space-between;
+    gap:6px;
+    margin-top:10px;
+  }
+  .rail-tick{
+    font-size:0.72rem;
+    color:var(--line);
+    font-weight:500;
+    background:none;
+    border:none;
+    padding:0;
+    font-family:inherit;
+    cursor:default;
+    flex:1;
+    min-width:0;
+    text-align:center;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .rail-tick.done{ color:var(--muted); }
+  .rail-tick.active{ color:var(--accent); font-weight:700; }
+  .rail-tick.clickable{ cursor:pointer; }
+  .rail-tick.clickable:hover{ text-decoration:underline; }
+  .rail-tick.clickable:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  @media (max-width:420px){
+    .rail-tick{ font-size:0.62rem; }
+  }
+
+  /* ---------- Card shell (question / success / bonus / recommend / feedback / thanks) ---------- */
+  .panel-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:8px;
+    box-shadow: 0 1px 2px rgba(33,49,74,0.06);
+    padding:32px;
+    animation: fade-in 0.3s ease both;
+  }
+  @media (max-width:600px){ .panel-card{ padding:20px; } }
+  .q-eyebrow{
+    font-family:'Titillium Web', sans-serif;
+    font-size:0.78rem;
+    font-weight:600;
+    color:var(--accent);
+    margin-bottom:10px;
+  }
+  .q-title{
+    font-family:'Titillium Web', sans-serif;
+    font-size:1.35rem;
+    line-height:1.4;
+    font-weight:600;
+    margin:0 0 6px;
+    color:var(--ink);
+  }
+  @media (max-width:460px){ .q-title{ font-size:1.15rem; } }
+  .q-hint{
+    font-size:0.85rem;
+    color:var(--muted);
+    margin:0 0 20px;
+  }
+  .options{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .option{
+    display:flex;
+    align-items:flex-start;
+    gap:14px;
+    padding:14px 16px;
+    border:1.5px solid var(--line);
+    border-radius:6px;
+    cursor:pointer;
+    background:var(--card);
+    text-align:left;
+    font-family:inherit;
+    font-size:0.98rem;
+    color:var(--ink);
+    transition: background-color 0.12s ease, border-color 0.12s ease;
+    width:100%;
+  }
+  .option:hover{ border-color: var(--accent); background: var(--accent-soft); }
+  .option:focus-visible{ outline:none; box-shadow: 0 0 0 3px rgba(255,122,89,0.25); }
+  .option-main{ display:flex; flex-direction:column; gap:3px; }
+  .option-desc{ font-size:0.84rem; color:var(--muted); font-weight:400; line-height:1.4; }
+
+  .dot{
+    flex:none;
+    width:18px; height:18px;
+    margin-top:1px;
+    border-radius:50%;
+    border:2px solid var(--line);
+    position:relative;
+    transition: border-color 0.12s ease;
+  }
+  .option.selected .dot{ border-color:var(--accent); }
+  .option.selected .dot::after{
+    content:"";
+    position:absolute;
+    top:3px; left:3px; right:3px; bottom:3px;
+    border-radius:50%;
+    background:var(--accent);
+  }
+  .check{
+    flex:none;
+    width:18px; height:18px;
+    margin-top:1px;
+    border-radius:4px;
+    border:2px solid var(--line);
+    position:relative;
+    background:var(--card);
+    transition: border-color 0.12s ease, background-color 0.12s ease;
+  }
+  .option.selected .check{ border-color:var(--accent); background:var(--accent); }
+  .option.selected .check::after{
+    content:"";
+    position:absolute;
+    left:5px; top:1px;
+    width:4px; height:9px;
+    border:solid #fff;
+    border-width:0 2px 2px 0;
+    transform:rotate(45deg);
+  }
+  .option.selected{ border-color:var(--accent); background:var(--accent-soft); font-weight:600; }
+  .option.selected .option-desc{ font-weight:400; }
+
+  .other-input{
+    margin-top:10px;
+    margin-left:32px;
+    width:calc(100% - 32px);
+    padding:10px 12px;
+    border:1.5px solid var(--line);
+    border-radius:6px;
+    font-family:inherit;
+    font-size:0.92rem;
+    color:var(--ink);
+    background:var(--card);
+  }
+  .other-input:focus{ outline:none; border-color:var(--accent); }
+  @media (max-width:460px){ .other-input{ margin-left:0; width:100%; } }
+
+  /* ---------- Groups (Zeitbudget / Bonus-Angaben) ---------- */
+  .group-block{ margin-bottom:26px; }
+  .group-block:last-child{ margin-bottom:0; }
+  .group-label{
+    font-family:'Titillium Web', sans-serif;
+    font-size:0.85rem;
+    font-weight:600;
+    color:var(--ink);
+    margin-bottom:12px;
+  }
+  .chip-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .chip{
+    padding:9px 16px;
+    border:1.5px solid var(--line);
+    border-radius:999px;
+    background:var(--card);
+    font-family:inherit;
+    font-size:0.88rem;
+    color:var(--ink);
+    cursor:pointer;
+    transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+  }
+  .chip:hover{ border-color:var(--accent); }
+  .chip:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(255,122,89,0.25); }
+  .chip.selected{ background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600; }
+
+  /* ---------- Textarea ---------- */
+  .textarea{
+    width:100%;
+    min-height:120px;
+    padding:14px 16px;
+    border:1.5px solid var(--line);
+    border-radius:6px;
+    font-family:inherit;
+    font-size:0.98rem;
+    color:var(--ink);
+    resize:vertical;
+    background:var(--card);
+  }
+  .textarea:focus{ outline:none; border-color:var(--accent); }
+  .textarea::placeholder{ color:#93A6BA; }
+
+  /* ---------- Nav ---------- */
+  .nav{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:28px;
+  }
+  .btn{
+    font-family:'Titillium Web', sans-serif;
+    font-size:0.9rem;
+    font-weight:600;
+    border:none;
+    cursor:pointer;
+    padding:11px 20px;
+    border-radius:4px;
+  }
+  .btn-back{ color:var(--muted); background:none; padding:11px 4px; }
+  .btn-back:hover{ color:var(--ink); }
+  .btn-next{
+    background:var(--accent);
+    color:#fff;
+    padding:11px 28px;
+    transition: background-color 0.12s ease;
+  }
+  .btn-next:disabled{
+    background:#CBD6E2;
+    color:#8FA3B8;
+    cursor:not-allowed;
+  }
+  .btn-next:not(:disabled):hover{ background:var(--accent-dark); }
+  .btn:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; }
+
+  .sheet-index{
+    font-size:0.75rem;
+    color:var(--muted);
+    margin-top:20px;
+    text-align:right;
+  }
+
+  /* ---------- Success / thanks / bonus-intro / recommend screens ---------- */
+  .panel-head{
+    font-family:'Titillium Web', sans-serif;
+    font-size:1.5rem;
+    font-weight:600;
+    margin:0 0 8px;
+    color:var(--ink);
+  }
+  @media (max-width:460px){ .panel-head{ font-size:1.25rem; } }
+  .panel-sub{
+    color:var(--muted);
+    font-size:0.98rem;
+    line-height:1.55;
+    margin-bottom:0;
+  }
+  .panel-divider{
+    border:none;
+    border-top:1px solid var(--line);
+    margin:28px 0;
+  }
+  .upsell-title{
+    font-family:'Titillium Web', sans-serif;
+    font-size:1.1rem;
+    font-weight:600;
+    margin:0 0 8px;
+    color:var(--ink);
+  }
+  .cta-row{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    margin-top:20px;
+    flex-wrap:wrap;
+  }
+  .btn-cta{
+    font-family:'Titillium Web', sans-serif;
+    font-size:0.92rem;
+    font-weight:600;
+    border:none;
+    cursor:pointer;
+    padding:12px 26px;
+    border-radius:4px;
+    background:var(--accent);
+    color:#fff;
+    transition: background-color 0.12s ease;
+    text-decoration:none;
+    display:inline-block;
+  }
+  .btn-cta:hover{ background:var(--accent-dark); }
+  .skip-link{
+    font-family:'Titillium Web', sans-serif;
+    font-size:0.85rem;
+    font-weight:600;
+    color:var(--muted);
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding:0;
+  }
+  .skip-link:hover{ color:var(--ink); }
+
+  /* ---------- Recommend (Ja/Nein) ---------- */
+  .choice-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  @media (max-width:480px){ .choice-row{ grid-template-columns:1fr; } }
+  .choice-btn{
+    border:1.5px solid var(--line);
+    border-radius:8px;
+    background:var(--card);
+    padding:26px 20px;
+    text-align:center;
+    cursor:pointer;
+    font-family:'Titillium Web', sans-serif;
+    font-size:1.05rem;
+    font-weight:600;
+    color:var(--ink);
+    transition: border-color 0.12s ease, background-color 0.12s ease;
+  }
+  .choice-btn:hover{ border-color:var(--accent); background:var(--accent-soft); }
+  .choice-btn:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(255,122,89,0.25); }
+
+  .restart-link{
+    font-family:'Titillium Web', sans-serif;
+    font-size:0.85rem;
+    font-weight:600;
+    color:var(--muted);
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding:0;
+    margin-top:24px;
+    display:inline-block;
+  }
+  .restart-link:hover{ color:var(--ink); }
+
+  /* ---------- Newsletter opt-in (on thank-you screens) ---------- */
+  .newsletter-block{ margin-top:28px; padding-top:24px; border-top:1px solid var(--line); }
+  .check-row{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    cursor:pointer;
+    background:none;
+    border:none;
+    padding:0;
+    font-family:inherit;
+    font-size:0.92rem;
+    color:var(--ink);
+    text-align:left;
+  }
+  .check-row.selected .check{ border-color:var(--accent); background:var(--accent); }
+  .check-row.selected .check::after{
+    content:"";
+    position:absolute;
+    left:5px; top:1px;
+    width:4px; height:9px;
+    border:solid #fff;
+    border-width:0 2px 2px 0;
+    transform:rotate(45deg);
+  }
+  .newsletter-form{
+    display:flex;
+    gap:10px;
+    margin-top:16px;
+    flex-wrap:wrap;
+  }
+  .newsletter-form[hidden]{ display:none; }
+  .newsletter-email{
+    padding:10px 12px;
+    border:1.5px solid var(--line);
+    border-radius:6px;
+    font-family:inherit;
+    font-size:0.92rem;
+    color:var(--ink);
+    background:var(--card);
+    flex:1;
+    min-width:200px;
+  }
+  .newsletter-email:focus{ outline:none; border-color:var(--accent); }
+  .newsletter-success{
+    margin-top:14px;
+    font-size:0.9rem;
+    font-weight:600;
+    color:var(--teal);
+  }
+  .newsletter-consent-row{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    margin-top:14px;
+  }
+  .newsletter-consent-row[hidden]{ display:none; }
+  .newsletter-consent-row .check-row{ margin-top:1px; }
+  .newsletter-consent-text{
+    font-size:0.86rem;
+    line-height:1.5;
+    color:var(--ink);
+  }
+  .newsletter-consent-text a{
+    color:var(--orange);
+    font-weight:600;
+    text-decoration:none;
+  }
+  .newsletter-consent-text a:hover{ text-decoration:underline; }
+  .newsletter-submit-row{ margin-top:16px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<footer class="site-footer">
+  <div class="footer-links">
+    <a href="#" id="datenschutz-link">Datenschutz</a><span class="footer-sep">·</span><a href="#" id="impressum-link">Impressum</a>
+  </div>
+  <div class="footer-meta">© 2026 MakerPort Stralsund · Bedarfsanalyse · mit Hilfe von KI erstellt</div>
+</footer>
+
+<div class="modal-overlay" id="impressum-overlay" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="impressum-title">
+    <button class="modal-close" id="impressum-close" type="button" aria-label="Schließen">&times;</button>
+    <div class="modal-content">
+      <h2 id="impressum-title">Impressum</h2>
+      <p>Angaben gemäß § 5 Digitale-Dienste-Gesetz (DDG) für die Website des Wirtschaftsforums Stralsund.</p>
+
+      <h3>Angaben gemäß § 5 DDG</h3>
+      <p>Stralsunder Innovations- und Gründerzentrum GmbH<br>vertreten durch den Geschäftsführer Peter Fürst</p>
+
+      <h3>Anschrift</h3>
+      <p>Stralsunder Innovations- und Gründerzentrum GmbH<br>Heinrich-Mann-Straße 11<br>D-18435 Stralsund</p>
+
+      <h3>Projektstandort</h3>
+      <p>MakerPort Stralsund<br>Wasserstraße 68<br>D-18439 Stralsund</p>
+
+      <h3>Registereintrag</h3>
+      <p>Registergericht: Amtsgericht Stralsund<br>Registernummer: HRB 4079<br>USt-IdNr.: DE186842546</p>
+
+      <h3>Kontakt</h3>
+      <p>E-Mail: info@makerport.de<br>Internet: <a href="https://www.makerport.de" target="_blank" rel="noopener">www.makerport.de</a></p>
+
+      <h3>Verantwortlich für den redaktionellen Inhalt</h3>
+      <p>Peter Fürst<br>Heinrich-Mann-Straße 11<br>D-18435 Stralsund</p>
+
+      <h3>Technische Umsetzung</h3>
+      <p>Stralsunder Innovations- und Gründerzentrum GmbH, Heinrich-Mann-Straße 11, D-18435 Stralsund.</p>
+      <p>Die Website wird als statische Seite über GitHub Pages ausgeliefert, Anmelde- und Absagedaten werden über Supabase (Datenbank-Hosting in der EU) verarbeitet.</p>
+
+      <h3>Streitbeilegung</h3>
+      <p>Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>
+
+      <h3>Haftung für Inhalte</h3>
+      <p>Als Diensteanbieter sind wir gemäß § 7 Abs. 1 DDG für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich. Nach §§ 8 bis 10 DDG sind wir als Diensteanbieter jedoch nicht verpflichtet, übermittelte oder gespeicherte fremde Informationen zu überwachen oder nach Umständen zu forschen, die auf eine rechtswidrige Tätigkeit hinweisen.</p>
+      <p>Verpflichtungen zur Entfernung oder Sperrung der Nutzung von Informationen nach den allgemeinen Gesetzen bleiben hiervon unberührt. Eine diesbezügliche Haftung ist jedoch erst ab dem Zeitpunkt der Kenntnis einer konkreten Rechtsverletzung möglich. Bei Bekanntwerden von entsprechenden Rechtsverletzungen werden wir diese Inhalte umgehend entfernen.</p>
+
+      <h3>Haftung für Links</h3>
+      <p>Unser Angebot enthält gegebenenfalls Links zu externen Websites Dritter, auf deren Inhalte wir keinen Einfluss haben. Deshalb können wir für diese fremden Inhalte auch keine Gewähr übernehmen. Für die Inhalte der verlinkten Seiten ist stets der jeweilige Anbieter oder Betreiber der Seiten verantwortlich. Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist ohne konkrete Anhaltspunkte einer Rechtsverletzung nicht zumutbar. Bei Bekanntwerden von Rechtsverletzungen werden wir derartige Links umgehend entfernen.</p>
+
+      <h3>Urheberrecht</h3>
+      <p>Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen Urheberrecht. Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechts bedürfen der schriftlichen Zustimmung des jeweiligen Erstellers. Soweit die Inhalte auf dieser Seite nicht vom Betreiber erstellt wurden, werden die Urheberrechte Dritter beachtet. Sollten Sie trotzdem auf eine Urheberrechtsverletzung aufmerksam werden, bitten wir um einen entsprechenden Hinweis.</p>
+
+      <p class="modal-stand">Stand: September 2026</p>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="datenschutz-overlay" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="datenschutz-title">
+    <button class="modal-close" id="datenschutz-close" type="button" aria-label="Schließen">&times;</button>
+    <div class="modal-content">
+      <h2 id="datenschutz-title">Datenschutzerklärung</h2>
+      <p>Der Schutz deiner persönlichen Daten ist uns wichtig. Diese Erklärung informiert dich darüber, welche Daten bei Nutzung dieser Bedarfsanalyse verarbeitet werden, zu welchem Zweck und auf welcher Rechtsgrundlage.</p>
+
+      <h3>Verantwortlicher</h3>
+      <p>Stralsunder Innovations- und Gründerzentrum GmbH<br>Heinrich-Mann-Straße 11<br>D-18435 Stralsund<br>E-Mail: info@makerport.de</p>
+
+      <h3>Hosting</h3>
+      <p>Diese Website wird als statische Seite über GitHub Pages (GitHub Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA, ein Unternehmen der Microsoft-Gruppe) ausgeliefert. Beim Aufruf der Seite verarbeitet GitHub technisch notwendige Verbindungsdaten (u. a. IP-Adresse, Datum und Uhrzeit des Zugriffs), um die Seite an deinen Browser ausliefern zu können. Mit GitHub haben wir die im GitHub-Kundenvertrag enthaltene Auftragsverarbeitungsvereinbarung (GitHub Data Protection Agreement) akzeptiert. Da die Auslieferung technisch über ein weltweites Auslieferungsnetzwerk erfolgt, kann es dabei zu einer Datenübermittlung in die USA kommen; GitHub stellt hierfür ein angemessenes Datenschutzniveau über die Standardvertragsklauseln der EU-Kommission sicher. Weitere Informationen findest du in der Datenschutzerklärung von GitHub.</p>
+
+      <h3>Auftragsverarbeitung</h3>
+      <p>Mit allen im Folgenden genannten Dienstleistern (Supabase, Wix, Resend) haben wir im Rahmen der jeweiligen Kontoerstellung eine Auftragsverarbeitungsvereinbarung (AVV) nach Art. 28 DSGVO abgeschlossen und, soweit auswählbar, eine EU- bzw. deutsche Serverregion konfiguriert.</p>
+
+      <h3>Bedarfsanalyse-Fragebogen</h3>
+      <p>Deine Antworten im Fragebogen (Rolle, Anliegen, Themeninteressen, Zeitbudget etc.) werden ohne Namen, E-Mail-Adresse oder andere direkt identifizierende Angaben erfasst und anonymisiert in einer Datenbank bei Supabase gespeichert. Die Speicherung erfolgt in einer EU-Rechenzentrumsregion. Eine Rückverfolgung der Antworten auf deine Person ist uns technisch nicht möglich. Die Auswertung erfolgt ausschließlich zusammengefasst, um Angebote im MakerPort bedarfsgerecht zu gestalten.</p>
+      <p>Rechtsgrundlage ist unser berechtigtes Interesse (Art. 6 Abs. 1 lit. f DSGVO) an einer bedarfsorientierten Weiterentwicklung des MakerPort-Angebots. Da keine personenbezogenen Daten anfallen, ist eine Einwilligung hierfür nicht erforderlich.</p>
+
+      <h3>Newsletter-Anmeldung</h3>
+      <p>Meldest du dich am Ende des Fragebogens freiwillig zum Newsletter an, speichern wir deine E-Mail-Adresse, um dir den MakerPort-Newsletter zuzusenden. Dies ist die einzige Stelle, an der wir personenbezogene Daten im engeren Sinn erheben. Der Versand erfolgt über Wix sowie Resend, jeweils mit Serverstandort in der EU; beide Dienstleister verarbeiten deine E-Mail-Adresse in unserem Auftrag auf Grundlage der mit ihnen abgeschlossenen AVV.</p>
+      <p>Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO). Du kannst diese Einwilligung jederzeit mit Wirkung für die Zukunft widerrufen, z. B. per E-Mail an info@makerport.de oder über den Abmeldelink im Newsletter. Deine E-Mail-Adresse wird bis zum Widerruf bzw. bis zum Wegfall des Zwecks gespeichert.</p>
+
+      <h3>Cookies</h3>
+      <p>Diese Website setzt keine Cookies zu Analyse- oder Marketingzwecken ein. Der Cookie-Hinweis am unteren Bildschirmrand speichert lediglich lokal in deinem Browser, dass du ihn gesehen hast (technisch notwendig gemäß § 25 Abs. 2 Nr. 2 TTDSG, keine Einwilligung erforderlich). Darüber hinaus werden nur technisch notwendige, temporäre Zustände im Browser gehalten, die beim Schließen der Seite verloren gehen.</p>
+
+      <h3>Deine Rechte</h3>
+      <p>Dir stehen gegenüber deinen personenbezogenen Daten grundsätzlich die Rechte auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16 DSGVO), Löschung (Art. 17 DSGVO), Einschränkung der Verarbeitung (Art. 18 DSGVO), Datenübertragbarkeit (Art. 20 DSGVO) sowie Widerspruch gegen die Verarbeitung (Art. 21 DSGVO) zu. Wende dich hierfür an info@makerport.de.</p>
+      <p>Darüber hinaus hast du das Recht, dich bei einer Datenschutzaufsichtsbehörde zu beschweren, z. B. beim Landesbeauftragten für Datenschutz und Informationsfreiheit Mecklenburg-Vorpommern.</p>
+
+      <h3>Speicherdauer</h3>
+      <p>Fragebogenantworten werden anonymisiert gespeichert und unterliegen keiner personenbezogenen Löschfrist. E-Mail-Adressen aus der Newsletter-Anmeldung werden bis zum Widerruf der Einwilligung gespeichert.</p>
+
+      <h3>Änderung dieser Datenschutzerklärung</h3>
+      <p>Wir passen diese Datenschutzerklärung an, sobald sich die zugrunde liegende Datenverarbeitung ändert. Es gilt jeweils die zum Zeitpunkt deines Besuchs aktuelle Fassung.</p>
+
+      <p class="modal-stand">Stand: September 2026</p>
+    </div>
+  </div>
+</div>
+
+<div class="cookie-banner" id="cookie-banner" hidden>
+  <div class="cookie-inner">
+    <div class="cookie-text">
+      Wir verwenden nur technisch notwendige Funktionen — keine Tracking- oder Marketing-Cookies. Details dazu in unserer <a href="#" id="cookie-datenschutz-link">Datenschutzerklärung</a>.
+    </div>
+    <div class="cookie-actions">
+      <button class="cookie-necessary" id="cookie-necessary" type="button">Nur notwendige</button>
+      <button class="cookie-accept" id="cookie-accept" type="button">Annehmen</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+
+  /* TODO: replace with your real Google review link (Google Business Profile → "Get more reviews") */
+  const GOOGLE_REVIEW_URL = 'https://www.google.com/search?sca_esv=d1654259742c7a2c&hl=de&authuser=0&sxsrf=APpeQntGlyGHJQrDA_78edcIJ0BbYc0kZQ:1790701160402&q=MakerPort+Stralsund&si=APenkKm7iecQ4G6P-TsbSMFKIQtv3EFIqRAFw-i8uEbk55Z-_-xNnM7AU8_QX1QYI8pRXsxD1JiooTZI2nx4ndgPfiWRLgIcTiTHJoITIgigwetCFy8Fmo0%3D&uds=AJ5uw18zeF8z_P7IQbfeR8tV0KKTibFX50J_Xgbx26yTFacqF5pcOmdlvULxAPLrCTXxPdEv68kfU6spniiu5c59NMIaF_7WUg-i0hRAjDARu48arrHrEwE&sa=X&ved=2ahUKEwjIy8HUoZSXAxWBVPEDHeJGORgQ3PALegQIHBAE&biw=1248&bih=583&dpr=2#sv=CAESzQEKuQEStgEKd0FKaVQ0dEstR2JsR0c5SF9aaENzSWxtbW9kdndOa1lkRmlWZTlHOFo1WUFDdm1TUmdyNlJXd2l4OVRnRGEtV01uS2ZJN1l0REtQcXRXNWVkR2JkM0NHUlhVSjFGa05HMDVEekY2eENQOVJRX1laUldJX285S0pJEhcxdTI3YXMyQUZiV0s3TllQNnZPdjJBVRoiQURzcjlmVFpfWkI3SnFTQjFZWkpMYTJoMlI1WkdQVnBvZxIEODA1MRoBMyoAMAA4AUAAGAAg8raU7g1KAhAB';
+
+  const ROLES = [
+    { id:'privat', icon:'person', title:'Privatpersonen', path:'privat', accent:'orange',
+      desc:'Du willst im MakerPort auf eigene Faust lernen, eine Idee umsetzen oder dich vernetzen.' },
+    { id:'fachkraft', icon:'worker', title:'Angestellte & Fachkräfte', path:'fachkraft', accent:'indigo',
+      desc:'Du bringst berufliche Erfahrung mit und willst neue Methoden oder Skills für deinen Job aufbauen.' },
+    { id:'unternehmen', icon:'building', title:'Unternehmen & Selbstständige', path:'b2b', accent:'teal',
+      desc:'Du willst mit MakerPort eine geschäftliche Herausforderung angehen, von neuen Technologien bis Talentgewinnung.' },
+  ];
+  const ROLE_ICONS = {
+    person: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a5 5 0 0 1 5-5h6a5 5 0 0 1 5 5v1"/></svg>',
+    worker: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18a8 8 0 0 1 16 0"/><path d="M2 18h20"/><path d="M12 10V6"/></svg>',
+    building: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="1"/><path d="M9 21v-4h6v4"/><path d="M9 7h1M9 11h1M14 7h1M14 11h1"/></svg>',
+  };
+  const ACCENTS = {
+    orange:{ base:'var(--orange)', dark:'var(--orange-dark)', soft:'#E0F7FA' },
+    indigo:{ base:'var(--indigo)', dark:'var(--indigo-dark)', soft:'#E7EBF2' },
+    teal:{ base:'var(--teal)', dark:'var(--teal-dark)', soft:'#FDE6F0' },
+  };
+
+  const QUESTIONS = {
+    privat: [
+      { id:'anliegen', kind:'multi', tick:'Anliegen', eyebrow:'Einstieg & Zielsetzung',
+        question:'Was beschreibt dein Anliegen am besten?', hint:'Mehrfachauswahl möglich',
+        options:[
+          { value:'Ich möchte eine eigene Idee / ein eigenes Projekt umsetzen.' },
+          { value:'Ich möchte moderne Technologien ausprobieren.' },
+          { value:'Ich möchte digitale Kenntnisse aufbauen oder festigen.' },
+          { value:'Ich möchte mich mit Gleichgesinnten austauschen und vernetzen.' },
+          { value:'Sonstiges', other:true },
+        ] },
+      { id:'wissensstand', kind:'single', tick:'Wissensstand', eyebrow:'Wissensstand & Vorerfahrung',
+        question:'Wie schätzt du deine Erfahrung im digitalen/technischen Bereich ein?',
+        options:[
+          { value:'Unerfahren', desc:'Ich habe wenig Vorkenntnisse und möchte Grundlagen lernen.' },
+          { value:'Fortgeschritten', desc:'Ich kenne mich mit Standard-Tools gut aus und möchte Neues entdecken.' },
+          { value:'Erfahren', desc:'Ich bringe konkretes Fachwissen mit und möchte mehr umsetzen.' },
+        ] },
+      { id:'themen', kind:'multi', tick:'Themen', eyebrow:'Konkreter Themenbedarf',
+        question:'Welche Themen oder Tools interessieren dich aktuell besonders?', hint:'Mehrfachauswahl möglich',
+        options:[
+          { value:'Maker-Equipment', desc:'3D-Drucker, Werkstatt & Prototyping' },
+          { value:'Software & KI', desc:'Künstliche Intelligenz (ChatGPT & Co.), Programmierung, Automatisierung' },
+          { value:'Medien & Design', desc:'Bild-/Videobearbeitung, Webdesign, Content Creation' },
+          { value:'Gründung', desc:'Businessplan, Finanzierung, erste Schritte in die Selbstständigkeit' },
+          { value:'Marketing', desc:'Social Media, Branding, digitale Vermarktung eigener Ideen' },
+          { value:'Hardware & IoT', desc:'Sensorik, Arduino, Microcontroller, Smart Home' },
+          { value:'Sicherheit & Alltag', desc:'Datenschutz, Online-Sicherheit, Smartphone-/PC-Tricks' },
+          { value:'Ich bin noch unsicher und möchte mich überraschen lassen.' },
+        ] },
+      { id:'zeitbudget', kind:'groups', tick:'Zeit & Format', eyebrow:'Zeitbudget & Wunscheinbindung',
+        question:'Wann passt es dir am besten?', hint:'Mehrfachauswahl möglich',
+        groups:[
+          { key:'wochentage', label:'Wochentage', layout:'chips', multiple:true, options:['Mo','Di','Mi','Do','Fr','Sa','So'] },
+          { key:'tageszeit', label:'Tageszeit', layout:'chips', multiple:true, options:['Vormittags','Nachmittags','Abends'] },
+          { key:'dauer', label:'Dauer', layout:'chips', multiple:true, options:['ca. 1 Stunde','2–3 Stunden','Tages-Workshop'] },
+          { key:'haeufigkeit', label:'Häufigkeit', layout:'chips', multiple:true, options:['Spontan','Wöchentlich','Monatlich'] },
+          { key:'format', label:'Welches Format bevorzugst du?', layout:'list', options:[
+            { value:'Offene Werkstatt', desc:'Flexibel vorbeikommen, Geräte nutzen & eigene Projekte umsetzen' },
+            { value:'Vor-Ort-Workshop', desc:'Gemeinsam im MakerPort lernen & ausprobieren' },
+            { value:'Webinar / Online', desc:'Bequem von zu Hause aus teilnehmen' },
+            { value:'Meetup & Netzwerk', desc:'Lockerer Austausch bei Kaffee oder Feierabendbier' },
+          ] },
+        ] },
+      { id:'abschluss', kind:'text', tick:'Abschluss', eyebrow:'Offener Abschluss (optional)',
+        question:'Gibt es ein bestimmtes Problem oder Projekt, bei dem wir dir direkt helfen können?',
+        placeholder:'Erzähl uns kurz davon … (optional)' },
+    ],
+    fachkraft: [
+      { id:'anliegen', kind:'multi', tick:'Anliegen', eyebrow:'Einstieg & Zielsetzung',
+        question:'Was beschreibt dein Anliegen am besten?', hint:'Mehrfachauswahl möglich',
+        options:[
+          { value:'Arbeitsabläufe vereinfachen & automatisieren' },
+          { value:'Neue Tools & Methoden für den Job erlernen' },
+          { value:'Konkretes Projekt / Prototyp für die Firma umsetzen' },
+          { value:'Netzwerken & Austausch mit anderen Fachkräften' },
+          { value:'Sonstiges', other:true },
+        ] },
+      { id:'wissensstand', kind:'single', tick:'Wissensstand', eyebrow:'Wissensstand & Vorerfahrung',
+        question:'Wie schätzt du deine Erfahrung im digitalen/technischen Bereich ein?',
+        options:[
+          { value:'Unerfahren', desc:'Ich suche erste Orientierung bei digitalen Trends & Tools.' },
+          { value:'Fortgeschritten', desc:'Ich nutze digitale Tools im Job und möchte meine Skills ausbauen.' },
+          { value:'Erfahren', desc:'Ich habe tiefes Fachwissen und suche Austausch oder Equipment.' },
+        ] },
+      { id:'themen', kind:'multi', tick:'Themen', eyebrow:'Konkreter Themenbedarf',
+        question:'Welche Themen oder Tools interessieren dich aktuell besonders?', hint:'Mehrfachauswahl möglich',
+        options:[
+          { value:'KI & Automatisierung', desc:'ChatGPT, Prompting, Prozess-Tools' },
+          { value:'Agile Methoden', desc:'Design Thinking, Scrum, New Work' },
+          { value:'Prototyping & Tech', desc:'3D-Druck, CAD, IoT, Hardware-Anwendungen' },
+          { value:'Daten & Software', desc:'Datenanalyse, IT-Sicherheit, Programmierung' },
+          { value:'Marketing & Content', desc:'Digitale Kommunikation, Social Media, Design' },
+          { value:'Noch unsicher / Offen für neue Trends' },
+        ] },
+      { id:'zeitbudget', kind:'groups', tick:'Zeit & Format', eyebrow:'Zeitbudget & Wunscheinbindung',
+        question:'Wann passt es dir am besten?', hint:'Mehrfachauswahl möglich',
+        groups:[
+          { key:'wochentage', label:'Wochentage', layout:'chips', multiple:true, options:['Mo','Di','Mi','Do','Fr','Sa','So'] },
+          { key:'tageszeit', label:'Tageszeit', layout:'chips', multiple:true, options:['Vormittags','Nachmittags','Abends'] },
+          { key:'dauer', label:'Dauer', layout:'chips', multiple:true, options:['ca. 1 Stunde','2–3 Stunden','Tages-Workshop'] },
+          { key:'haeufigkeit', label:'Häufigkeit', layout:'chips', multiple:true, options:['Einmalig / Nach Bedarf','Monatlich','Quartalsweise'] },
+          { key:'format', label:'Welches Format bevorzugst du?', layout:'list', options:[
+            { value:'Offene Werkstatt', desc:'Flexibel vorbeikommen, Geräte nutzen & eigene Projekte umsetzen' },
+            { value:'Vor-Ort-Workshop', desc:'Gemeinsam im MakerPort lernen & ausprobieren' },
+            { value:'Webinar / Online', desc:'Bequem von zu Hause aus teilnehmen' },
+            { value:'Meetup & Netzwerk', desc:'Lockerer Austausch bei Kaffee oder Feierabendbier' },
+          ] },
+        ] },
+      { id:'abschluss', kind:'text', tick:'Abschluss', eyebrow:'Offener Abschluss (optional)',
+        question:'Welche konkrete Herausforderung in deinem Arbeitsalltag würdest du gerne lösen?',
+        placeholder:'Erzähl uns kurz davon … (optional)' },
+    ],
+    b2b: [
+      { id:'anliegen', kind:'multi', tick:'Anliegen', eyebrow:'Einstieg & Zielsetzung',
+        question:'Was beschreibt dein Anliegen am besten?', hint:'Mehrfachauswahl möglich',
+        options:[
+          { value:'Geschäftsmodelle & Angebote digitalisieren' },
+          { value:'Unternehmensprozesse optimieren & automatisieren' },
+          { value:'Neue Produkte/Service-Ideen testen (Prototyping)' },
+          { value:'Fachkräfte & Talente finden (Employer Branding)' },
+          { value:'Innovationskultur & Skills im Team stärken' },
+          { value:'Sonstiges', other:true },
+        ] },
+      { id:'reifegrad', kind:'single', tick:'Reifegrad', eyebrow:'Vorkenntnisse',
+        question:'Wie schätzt du den digitalen Reifegrad deiner Organisation ein?',
+        options:[
+          { value:'Einstieg', desc:'Wir stehen am Anfang der Digitalisierung und suchen Orientierung.' },
+          { value:'Fortgeschritten', desc:'Wir nutzen digitale Prozesse und wollen Innovation gezielt ausbauen.' },
+          { value:'Pionier', desc:'Wir arbeiten mit modernen Tech-Ansätzen und suchen Sparring & Netzwerke.' },
+        ] },
+      { id:'themen', kind:'multi', tick:'Themen', eyebrow:'Konkreter Themenbedarf',
+        question:'Welche Themen sind für dich aktuell besonders relevant?', hint:'Mehrfachauswahl möglich',
+        options:[
+          { value:'KI & Effizienz', desc:'KI-Implementierung, Prozessautomatisierung' },
+          { value:'Produktentwicklung', desc:'Prototyping, 3D-Druck, IoT, Hardware-Tests' },
+          { value:'Strategie & Innovation', desc:'Design Thinking, neue Geschäftsmodelle, agile Transformation' },
+          { value:'IT-Sicherheit & Daten', desc:'Cybersecurity, Cloud-Lösungen, DSGVO-Konformität' },
+          { value:'Sichtbarkeit & Recruiting', desc:'Digitales Marketing, Talent-Scouting, Community-Events' },
+          { value:'Bedarfsorientierte Individuallösungen' },
+        ] },
+      { id:'zeitbudget', kind:'groups', tick:'Zeit & Format', eyebrow:'Zeitbudget & Wunscheinbindung',
+        question:'Wann passt es dir am besten?', hint:'Mehrfachauswahl möglich',
+        groups:[
+          { key:'wochentage', label:'Wochentage', layout:'chips', multiple:true, options:['Mo','Di','Mi','Do','Fr','Sa','So'] },
+          { key:'tageszeit', label:'Tageszeit', layout:'chips', multiple:true, options:['Morgens','Tagsüber','Abends'] },
+          { key:'dauer', label:'Dauer', layout:'chips', multiple:true, options:['Impulse & Pitch-Formate (1–2 Stunden)','Halbtags-Workshops (3–4 Stunden)','Tages-Inkubator / Sprint'] },
+          { key:'haeufigkeit', label:'Häufigkeit', layout:'chips', multiple:true, options:['Einmalig / Nach Bedarf','Regelmäßig','Quartalsweise'] },
+          { key:'format', label:'Welches Format bevorzugst du?', layout:'list', options:[
+            { value:'Exklusiver Inhouse-Workshop / Firmenschulung', desc:'Individuelles Format direkt bei dir im Unternehmen' },
+            { value:'B2B-Netzwerk- & Matchmaking-Events', desc:'Kontakte zu passenden Partnern und Unternehmen knüpfen' },
+            { value:'Strategie-Sparring & Fachberatung', desc:'Fachlicher Austausch zu deiner digitalen Strategie' },
+            { value:'Hackathons & Challenges', desc:'Problemstellungen von Talenten lösen lassen' },
+          ] },
+        ] },
+      { id:'abschluss', kind:'text', tick:'Abschluss', eyebrow:'Offener Abschluss (optional)',
+        question:'Welche konkrete Herausforderung in deinem Arbeitsalltag würdest du gerne lösen?',
+        placeholder:'Erzähl uns kurz davon … (optional)' },
+    ]
+  };
+
+  /* Bonus-Angaben nach dem Hauptfragebogen — optimiert auf kurze, kategorisierte
+     Antworten statt Freitext, damit die Daten direkt auswertbar sind.
+     Alle drei Rollen bekommen ein eigenes, passendes Set. */
+  const BONUS_GROUPS_PRIVAT = [
+    { key:'alter', label:'Alter', layout:'chips', multiple:false,
+      options:['unter 18','18–24','25–34','35–44','45–54','55+'] },
+    { key:'beruf', label:'Beruflicher Hintergrund', layout:'chips', multiple:true,
+      options:['Schüler:in / Student:in','Angestellte:r','Selbstständig / Freiberuflich','Unternehmer:in','Sonstiges'] },
+    { key:'geschlecht', label:'Geschlecht', layout:'chips', multiple:false,
+      options:['Weiblich','Männlich','Divers','Keine Angabe'] },
+    { key:'interessen', label:'Interessen', layout:'chips', multiple:true,
+      options:['Technologie & Programmierung','Design & Kreativität','Handwerk & Prototyping','Business & Gründung','Nachhaltigkeit','Sonstiges'] },
+    { key:'quelle', label:'Wie hast du von uns erfahren?', layout:'chips', multiple:false,
+      options:['Social Media','Empfehlung','Suchmaschine','Veranstaltung / Messe','Presse / Blog','Sonstiges'] },
+  ];
+
+  const BONUS_GROUPS_FACHKRAFT = [
+    { key:'alter', label:'Alter', layout:'chips', multiple:false,
+      options:['unter 18','18–24','25–34','35–44','45–54','55+'] },
+    { key:'position', label:'Position', layout:'chips', multiple:false,
+      options:['Berufseinsteiger:in / Azubi','Fachkraft / Spezialist:in','Teamleitung','(Abteilungs-)Leitung','Geschäftsführung','Sonstiges'] },
+    { key:'branche', label:'Branche', layout:'chips', multiple:false,
+      options:['Industrie / Produktion','IT / Software','Handel','Dienstleistung','Verwaltung','Tourismus','Landwirtschaft','Handwerk','Sonstiges'] },
+    { key:'geschlecht', label:'Geschlecht', layout:'chips', multiple:false,
+      options:['Weiblich','Männlich','Divers','Keine Angabe'] },
+    { key:'interessen', label:'Interessen', layout:'chips', multiple:true,
+      options:['Technologie & Programmierung','Design & Kreativität','Handwerk & Prototyping','Business & Gründung','Nachhaltigkeit','Sonstiges'] },
+    { key:'quelle', label:'Wie hast du von uns erfahren?', layout:'chips', multiple:false,
+      options:['Social Media','Empfehlung','Suchmaschine','Veranstaltung / Messe','Presse / Blog','Sonstiges'] },
+  ];
+
+  const BONUS_GROUPS_BUSINESS = [
+    { key:'unternehmensgroesse', label:'Unternehmensgröße', layout:'chips', multiple:false,
+      options:['1–9 Mitarbeitende','10–49 Mitarbeitende','50–249 Mitarbeitende','250+ Mitarbeitende'] },
+    { key:'branche', label:'Branche', layout:'chips', multiple:false,
+      options:['Industrie / Produktion','IT / Software','Handel','Dienstleistung','Verwaltung','Tourismus','Landwirtschaft','Handwerk','Sonstiges'] },
+    { key:'position', label:'Deine Position im Unternehmen', layout:'chips', multiple:false,
+      options:['Geschäftsführung','Innovationsmanagement','Personalabteilung','Sonstiges'] },
+    { key:'quelle', label:'Wie hast du von uns erfahren?', layout:'chips', multiple:false,
+      options:['Social Media','Empfehlung','Suchmaschine','Veranstaltung / Messe','Presse / Blog','Sonstiges'] },
+  ];
+
+  function bonusGroupsFor(path){
+    if(path === 'b2b') return BONUS_GROUPS_BUSINESS;
+    if(path === 'fachkraft') return BONUS_GROUPS_FACHKRAFT;
+    return BONUS_GROUPS_PRIVAT;
+  }
+
+  let state = { stage:'intro', role:null, path:null, step:0, answers:{}, bonus:{}, feedback:'' };
+
+  function setRole(roleId){
+    const role = ROLES.find(r => r.id === roleId);
+    state = { stage:'form', role:roleId, path:role.path, step:0, answers:{}, bonus:{}, feedback:'' };
+    const a = ACCENTS[role.accent];
+    document.documentElement.style.setProperty('--accent', a.base);
+    document.documentElement.style.setProperty('--accent-dark', a.dark);
+    document.documentElement.style.setProperty('--accent-soft', a.soft);
+    render();
+  }
+
+  function isStepComplete(q){
+    if(q.kind === 'single') return !!state.answers[q.id];
+    if(q.kind === 'multi') return (state.answers[q.id] || []).length > 0;
+    return true; // groups & text steps are optional
+  }
+
+  function updateNextButton(q){
+    const btn = document.getElementById('next-btn');
+    if(btn) btn.disabled = !isStepComplete(q);
+  }
+
+  /* ---- Targeted (non-full-rerender) interaction handlers: keep the
+     screen still while ticking a box; only navigation re-renders. ---- */
+
+  function handleSingleClick(q, btnEl, container){
+    state.answers[q.id] = btnEl.dataset.value;
+    container.querySelectorAll('.option').forEach(el => {
+      el.classList.toggle('selected', el === btnEl);
+    });
+    updateNextButton(q);
+  }
+
+  function handleMultiClick(q, btnEl){
+    const value = btnEl.dataset.value;
+    const arr = state.answers[q.id] || (state.answers[q.id] = []);
+    const i = arr.indexOf(value);
+    const nowSelected = i === -1;
+    if(nowSelected) arr.push(value); else arr.splice(i,1);
+    btnEl.classList.toggle('selected', nowSelected);
+
+    const opt = q.options.find(o => (typeof o === 'string' ? o : o.value) === value);
+    if(opt && opt.other){
+      let input = btnEl.nextElementSibling;
+      const hasInput = input && input.classList && input.classList.contains('other-input');
+      if(nowSelected && !hasInput){
+        btnEl.insertAdjacentHTML('afterend', `<input type="text" class="other-input" placeholder="Kurz beschreiben …" value="${escapeHtml(state.answers[q.id+'__other']||'')}" />`);
+        const newInput = btnEl.nextElementSibling;
+        newInput.addEventListener('input', e => { state.answers[q.id+'__other'] = e.target.value; });
+        newInput.addEventListener('click', e => e.stopPropagation());
+      } else if(!nowSelected && hasInput){
+        input.remove();
+      }
+    }
+    updateNextButton(q);
+  }
+
+  function handleGroupClick(store, fullKey, btnEl, group, containerSelectorEl){
+    const value = btnEl.dataset.value;
+    const arr = store[fullKey] || (store[fullKey] = []);
+    const i = arr.indexOf(value);
+    const nowSelected = i === -1;
+    if(group.multiple === false){
+      // single-select chip group: clear siblings first
+      arr.length = 0;
+      if(containerSelectorEl){
+        containerSelectorEl.querySelectorAll('[data-group="'+fullKey+'"]').forEach(el => el.classList.remove('selected'));
+      }
+      if(nowSelected){ arr.push(value); btnEl.classList.add('selected'); }
+    } else {
+      if(nowSelected) arr.push(value); else arr.splice(i,1);
+      btnEl.classList.toggle('selected', nowSelected);
+    }
+  }
+
+  function setTextAnswer(qid, text){
+    state.answers[qid] = text;
+  }
+
+  function next(){
+    const qs = QUESTIONS[state.path];
+    if(state.step < qs.length - 1){
+      state.step++;
+      render();
+    } else {
+      state.stage = 'success';
+      render();
+    }
+  }
+
+  function back(){
+    if(state.step > 0){ state.step--; render(); }
+    else { state = { stage:'intro', role:null, path:null, step:0, answers:{}, bonus:{}, feedback:'' }; render(); }
+  }
+
+  function restart(){
+    state = { stage:'intro', role:null, path:null, step:0, answers:{}, bonus:{}, feedback:'' };
+    render();
+  }
+
+  function goBonus(){ state.stage = 'bonus'; render(); }
+  function skipBonus(){ state.stage = 'recommend'; render(); }
+  function bonusNext(){ state.stage = 'recommend'; render(); }
+  function bonusBack(){ state.stage = 'success'; render(); }
+  function recommendBack(){ state.stage = 'success'; render(); }
+  function chooseRecommend(value){
+    state.recommend = value;
+    state.stage = value === 'ja' ? 'thanks-google' : 'feedback';
+    render();
+  }
+  function feedbackBack(){ state.stage = 'recommend'; render(); }
+  function submitFeedback(){ state.stage = 'thanks-feedback'; render(); }
+
+  function toggleNewsletter(){
+    const btn = document.getElementById('newsletter-toggle-btn');
+    const form = document.getElementById('newsletter-form');
+    const consentRow = document.getElementById('newsletter-consent-row');
+    const consentBtn = document.getElementById('newsletter-consent-btn');
+    const submitRow = document.getElementById('newsletter-submit-row');
+    const submitBtn = document.getElementById('newsletter-submit');
+    const success = document.getElementById('newsletter-success');
+    const nowOn = btn.classList.toggle('selected');
+    form.hidden = !nowOn;
+    consentRow.hidden = !nowOn;
+    submitRow.hidden = !nowOn;
+    if(!nowOn){
+      success.hidden = true;
+      consentBtn.classList.remove('selected');
+      submitBtn.disabled = true;
+    }
+  }
+
+  function openNewsletterBlock(){
+    const btn = document.getElementById('newsletter-toggle-btn');
+    if(btn && !btn.classList.contains('selected')){ toggleNewsletter(); }
+  }
+
+  function toggleNewsletterConsent(){
+    const consentBtn = document.getElementById('newsletter-consent-btn');
+    const submitBtn = document.getElementById('newsletter-submit');
+    const nowOn = consentBtn.classList.toggle('selected');
+    submitBtn.disabled = !nowOn;
+  }
+
+  function submitNewsletter(){
+    const input = document.getElementById('newsletter-email');
+    const consentBtn = document.getElementById('newsletter-consent-btn');
+    const email = input.value.trim();
+    if(!email){ input.focus(); return; }
+    if(!consentBtn.classList.contains('selected')){ return; }
+    document.getElementById('newsletter-form').hidden = true;
+    document.getElementById('newsletter-consent-row').hidden = true;
+    document.getElementById('newsletter-submit-row').hidden = true;
+    document.getElementById('newsletter-success').hidden = false;
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function renderTopbar(){
+    return `<div class="topbar">
+      <button class="wordmark" id="wordmark-btn" type="button" aria-label="Zur Startseite">
+        <img class="wordmark-logo" src="https://www.digitalesmv.de/sites/default/files/2024-02/Logo_dmv_makerport_pos_RGB%20%281%29.png" alt="MakerPort Logo" />
+      </button>
+      <div class="kicker">Bedarfsanalyse</div>
+    </div>`;
+  }
+
+  function renderIntro(){
+    const cards = ROLES.map(r => `
+      <button class="path-card" data-role="${r.id}" style="--role-accent:${ACCENTS[r.accent].base}">
+        <div class="path-icon">${ROLE_ICONS[r.icon]}</div>
+        <div class="path-title">${r.title}</div>
+        <div class="path-desc">${r.desc}</div>
+        <div class="path-cta">Auswählen</div>
+      </button>
+    `).join('');
+    return `
+      ${renderTopbar()}
+      <div class="hero-question">In welcher Rolle bist du heute hier?</div>
+      <div class="paths">${cards}</div>
+    `;
+  }
+
+  function renderRail(){
+    const qs = QUESTIONS[state.path];
+    const total = qs.length;
+    const pct = (state.step / (total - 1)) * 100;
+    const label = ROLES.find(r => r.id === state.role).title;
+    const ticks = qs.map((q,i)=>{
+      let cls = 'rail-tick';
+      if(i < state.step) cls += ' done clickable';
+      if(i === state.step) cls += ' active clickable';
+      if(i <= state.step){
+        return `<button type="button" class="${cls}" data-step="${i}">${q.tick}</button>`;
+      }
+      return `<div class="${cls}">${q.tick}</div>`;
+    }).join('');
+    return `
+      <div class="rail-wrap">
+        <div class="rail-meta"><span>${label}</span><strong>Schritt ${state.step+1} / ${total}</strong></div>
+        <div class="rail"><div class="rail-fill" style="width:${pct}%"></div></div>
+        <div class="rail-ticks">${ticks}</div>
+      </div>
+    `;
+  }
+
+  function renderSingleOrMultiOption(q, opt, isMulti){
+    const value = typeof opt === 'string' ? opt : opt.value;
+    const desc = typeof opt === 'string' ? null : opt.desc;
+    const isOther = typeof opt === 'object' && opt.other;
+    const selected = isMulti
+      ? (state.answers[q.id] || []).includes(value)
+      : state.answers[q.id] === value;
+    const indicator = isMulti ? `<span class="check"></span>` : `<span class="dot"></span>`;
+    const otherVal = state.answers[q.id + '__other'] || '';
+    const otherField = (isOther && selected) ? `
+      <input type="text" class="other-input" data-other-for="${q.id}" placeholder="Kurz beschreiben …" value="${escapeHtml(otherVal)}" />
+    ` : '';
+    return `
+      <button class="option${selected?' selected':''}" data-value="${escapeHtml(value)}">
+        ${indicator}
+        <span class="option-main">
+          <span>${escapeHtml(value)}</span>
+          ${desc ? `<span class="option-desc">${escapeHtml(desc)}</span>` : ''}
+        </span>
+      </button>
+      ${otherField}
+    `;
+  }
+
+  function renderGroupsBlock(groups, store, keyPrefix){
+    return groups.map(g => {
+      const fullKey = keyPrefix + g.key;
+      if(g.layout === 'chips'){
+        const chips = g.options.map(opt => {
+          const selected = (store[fullKey] || []).includes(opt);
+          return `<button class="chip${selected?' selected':''}" data-group="${fullKey}" data-value="${escapeHtml(opt)}">${escapeHtml(opt)}</button>`;
+        }).join('');
+        return `<div class="group-block"><div class="group-label">${g.label}</div><div class="chip-row">${chips}</div></div>`;
+      } else {
+        const items = g.options.map(opt => {
+          const selected = (store[fullKey] || []).includes(opt.value);
+          return `<button class="option${selected?' selected':''}" data-group="${fullKey}" data-value="${escapeHtml(opt.value)}">
+            <span class="check"></span>
+            <span class="option-main"><span>${escapeHtml(opt.value)}</span><span class="option-desc">${escapeHtml(opt.desc)}</span></span>
+          </button>`;
+        }).join('');
+        return `<div class="group-block"><div class="group-label">${g.label}</div><div class="options">${items}</div></div>`;
+      }
+    }).join('');
+  }
+
+  function renderQuestion(){
+    const qs = QUESTIONS[state.path];
+    const q = qs[state.step];
+    const isLast = state.step === qs.length - 1;
+    const complete = isStepComplete(q);
+
+    let body = '';
+    if(q.kind === 'single'){
+      body = `<div class="options">${q.options.map(o => renderSingleOrMultiOption(q, o, false)).join('')}</div>`;
+    } else if(q.kind === 'multi'){
+      body = `<div class="options">${q.options.map(o => renderSingleOrMultiOption(q, o, true)).join('')}</div>`;
+    } else if(q.kind === 'groups'){
+      body = renderGroupsBlock(q.groups, state.answers, q.id + '__');
+    } else if(q.kind === 'text'){
+      const val = state.answers[q.id] || '';
+      body = `<textarea class="textarea" id="text-answer" placeholder="${escapeHtml(q.placeholder||'')}">${escapeHtml(val)}</textarea>`;
+    }
+
+    return `
+      ${renderTopbar()}
+      ${renderRail()}
+      <div class="panel-card">
+        <div class="q-eyebrow">${q.eyebrow}</div>
+        <div class="q-title">${q.question}</div>
+        ${q.hint ? `<div class="q-hint">${q.hint}</div>` : `<div class="q-hint">&nbsp;</div>`}
+        ${body}
+        <div class="nav">
+          <button class="btn btn-back" id="back-btn">Zurück</button>
+          <button class="btn btn-next" id="next-btn" ${complete ? '' : 'disabled'}>${isLast ? 'Absenden' : 'Weiter'}</button>
+        </div>
+      </div>
+      <div class="sheet-index">Schritt ${state.step+1} von ${qs.length}</div>
+    `;
+  }
+
+  function renderSuccess(){
+    return `
+      ${renderTopbar()}
+      <div class="panel-card">
+        <div class="panel-head">Danke für deine Teilnahme!</div>
+        <p class="panel-sub">Deine Angaben helfen uns, den MakerPort noch passender für dich zu gestalten.</p>
+        <hr class="panel-divider" />
+        <div class="upsell-title">Wir würden gerne noch mehr von dir erfahren</div>
+        <p class="panel-sub">Mit ein paar zusätzlichen Angaben können wir dir noch gezieltere Formate vorschlagen — dauert nur eine Minute.</p>
+        <div class="cta-row">
+          <button class="btn-cta" id="bonus-btn">Angaben ergänzen</button>
+          <button class="skip-link" id="skip-btn">Überspringen</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderBonus(){
+    const groups = bonusGroupsFor(state.path);
+    const body = renderGroupsBlock(groups, state.bonus, '');
+    return `
+      ${renderTopbar()}
+      <div class="panel-card">
+        <div class="q-eyebrow">Noch ein paar Angaben zu dir</div>
+        <div class="q-title">Erzähl uns kurz mehr über dich</div>
+        <div class="q-hint">Alle Angaben sind freiwillig</div>
+        ${body}
+        <div class="nav">
+          <button class="btn btn-back" id="back-btn">Zurück</button>
+          <button class="btn btn-next" id="next-btn">Weiter</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderRecommend(){
+    return `
+      ${renderTopbar()}
+      <div class="panel-card">
+        <div class="q-eyebrow">Letzte Frage</div>
+        <div class="q-title">Würdest du den MakerPort weiterempfehlen?</div>
+        <div class="q-hint">&nbsp;</div>
+        <div class="choice-row">
+          <button class="choice-btn" data-value="ja">Ja</button>
+          <button class="choice-btn" data-value="nein">Nein</button>
+        </div>
+        <div class="nav">
+          <button class="btn btn-back" id="back-btn">Zurück</button>
+          <span></span>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderFeedback(){
+    return `
+      ${renderTopbar()}
+      <div class="panel-card">
+        <div class="q-eyebrow">Dein Feedback</div>
+        <div class="q-title">Wie können wir den MakerPort für dich verbessern?</div>
+        <div class="q-hint">&nbsp;</div>
+        <textarea class="textarea" id="feedback-answer" placeholder="Erzähl uns, was wir besser machen können …">${escapeHtml(state.feedback||'')}</textarea>
+        <div class="nav">
+          <button class="btn btn-back" id="back-btn">Zurück</button>
+          <button class="btn btn-next" id="next-btn">Absenden</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderNewsletterBlock(){
+    return `
+      <div class="newsletter-block">
+        <button class="check-row" id="newsletter-toggle-btn" type="button">
+          <span class="check"></span>
+          <span>Ich möchte den MakerPort-Newsletter erhalten</span>
+        </button>
+        <div class="newsletter-form" id="newsletter-form" hidden>
+          <input type="email" class="newsletter-email" id="newsletter-email" placeholder="deine@email.de" />
+        </div>
+        <div class="newsletter-consent-row" id="newsletter-consent-row" hidden>
+          <button class="check-row" id="newsletter-consent-btn" type="button" aria-label="Datenschutzerklärung akzeptieren"><span class="check"></span></button>
+          <span class="newsletter-consent-text">Ich habe die <a href="#" id="newsletter-consent-link">Datenschutzerklärung</a> gelesen und bin einverstanden.</span>
+        </div>
+        <div class="newsletter-submit-row" id="newsletter-submit-row" hidden>
+          <button class="btn-cta" id="newsletter-submit" type="button" disabled>Anmelden</button>
+        </div>
+        <div class="newsletter-success" id="newsletter-success" hidden>Danke! Du bist angemeldet.</div>
+      </div>
+    `;
+  }
+
+  function renderThanksFeedback(){
+    return `
+      ${renderTopbar()}
+      <div class="panel-card">
+        <div class="panel-head">Danke für dein Feedback!</div>
+        <p class="panel-sub">Wir nehmen jede Rückmeldung ernst und nutzen sie, um den MakerPort laufend für dich weiterzuentwickeln.</p>
+        ${renderNewsletterBlock()}
+      </div>
+    `;
+  }
+
+  function renderThanksGoogle(){
+    return `
+      ${renderTopbar()}
+      <div class="panel-card">
+        <div class="panel-head" id="google-head">Danke für deine Teilnahme!</div>
+        <p class="panel-sub" id="google-sub">Es freut uns total, dass dir der MakerPort gefällt. Mit einer kurzen Google-Bewertung hilfst du uns, noch mehr Menschen wie dich zu erreichen.</p>
+        <div class="cta-row" id="google-cta-row">
+          <a class="btn-cta" id="google-review-link" href="${GOOGLE_REVIEW_URL}" target="_blank" rel="noopener">Auf Google bewerten</a>
+        </div>
+        ${renderNewsletterBlock()}
+      </div>
+    `;
+  }
+
+  function render(){
+    const app = document.getElementById('app');
+
+    if(state.stage === 'intro'){
+      app.innerHTML = renderIntro();
+      app.querySelectorAll('.path-card').forEach(el => {
+        el.addEventListener('click', () => setRole(el.dataset.role));
+      });
+
+    } else if(state.stage === 'form'){
+      app.innerHTML = renderQuestion();
+      const q = QUESTIONS[state.path][state.step];
+
+      if(q.kind === 'single'){
+        const container = app.querySelector('.panel-card > .options');
+        container.querySelectorAll('.option').forEach(el => {
+          el.addEventListener('click', () => handleSingleClick(q, el, container));
+        });
+      } else if(q.kind === 'multi'){
+        app.querySelectorAll('.panel-card > .options > .option').forEach(el => {
+          el.addEventListener('click', (e) => {
+            if(e.target.closest('.other-input')) return;
+            handleMultiClick(q, el);
+          });
+        });
+        const otherInput = app.querySelector('.other-input');
+        if(otherInput){
+          otherInput.addEventListener('input', (e) => { state.answers[q.id+'__other'] = e.target.value; });
+          otherInput.addEventListener('click', (e) => e.stopPropagation());
+        }
+      } else if(q.kind === 'groups'){
+        const panel = app.querySelector('.panel-card');
+        q.groups.forEach(g => {
+          const fullKey = q.id + '__' + g.key;
+          panel.querySelectorAll('[data-group="'+fullKey+'"]').forEach(el => {
+            el.addEventListener('click', () => handleGroupClick(state.answers, fullKey, el, g, panel));
+          });
+        });
+      } else if(q.kind === 'text'){
+        const ta = document.getElementById('text-answer');
+        if(ta) ta.addEventListener('input', (e) => setTextAnswer(q.id, e.target.value));
+      }
+
+      document.getElementById('back-btn').addEventListener('click', back);
+      document.getElementById('next-btn').addEventListener('click', next);
+      app.querySelectorAll('.rail-tick.clickable').forEach(el => {
+        el.addEventListener('click', () => { state.step = parseInt(el.dataset.step, 10); render(); });
+      });
+
+    } else if(state.stage === 'success'){
+      app.innerHTML = renderSuccess();
+      document.getElementById('bonus-btn').addEventListener('click', goBonus);
+      document.getElementById('skip-btn').addEventListener('click', skipBonus);
+
+    } else if(state.stage === 'bonus'){
+      app.innerHTML = renderBonus();
+      const panel = app.querySelector('.panel-card');
+      bonusGroupsFor(state.path).forEach(g => {
+        panel.querySelectorAll('[data-group="'+g.key+'"]').forEach(el => {
+          el.addEventListener('click', () => handleGroupClick(state.bonus, g.key, el, g, panel));
+        });
+      });
+      document.getElementById('back-btn').addEventListener('click', bonusBack);
+      document.getElementById('next-btn').addEventListener('click', bonusNext);
+
+    } else if(state.stage === 'recommend'){
+      app.innerHTML = renderRecommend();
+      app.querySelectorAll('.choice-btn').forEach(el => {
+        el.addEventListener('click', () => chooseRecommend(el.dataset.value));
+      });
+      document.getElementById('back-btn').addEventListener('click', recommendBack);
+
+    } else if(state.stage === 'feedback'){
+      app.innerHTML = renderFeedback();
+      const ta = document.getElementById('feedback-answer');
+      if(ta) ta.addEventListener('input', (e) => { state.feedback = e.target.value; });
+      document.getElementById('back-btn').addEventListener('click', feedbackBack);
+      document.getElementById('next-btn').addEventListener('click', submitFeedback);
+
+    } else if(state.stage === 'thanks-feedback'){
+      app.innerHTML = renderThanksFeedback();
+      document.getElementById('newsletter-toggle-btn').addEventListener('click', toggleNewsletter);
+      document.getElementById('newsletter-consent-btn').addEventListener('click', toggleNewsletterConsent);
+      document.getElementById('newsletter-consent-link').addEventListener('click', (e) => modalOpeners.datenschutz(e));
+      document.getElementById('newsletter-submit').addEventListener('click', submitNewsletter);
+
+    } else if(state.stage === 'thanks-google'){
+      app.innerHTML = renderThanksGoogle();
+      document.getElementById('google-review-link').addEventListener('click', () => {
+        document.getElementById('google-head').textContent = 'Danke für deine Bewertung.';
+        document.getElementById('google-sub').style.display = 'none';
+        document.getElementById('google-cta-row').style.display = 'none';
+        openNewsletterBlock();
+      });
+      document.getElementById('newsletter-toggle-btn').addEventListener('click', toggleNewsletter);
+      document.getElementById('newsletter-consent-btn').addEventListener('click', toggleNewsletterConsent);
+      document.getElementById('newsletter-consent-link').addEventListener('click', (e) => modalOpeners.datenschutz(e));
+      document.getElementById('newsletter-submit').addEventListener('click', submitNewsletter);
+    }
+
+    const wm = document.getElementById('wordmark-btn');
+    if(wm) wm.addEventListener('click', restart);
+  }
+
+  render();
+
+  const modalOpeners = {};
+  ['impressum', 'datenschutz'].forEach(name => {
+    const overlay = document.getElementById(name + '-overlay');
+    const link = document.getElementById(name + '-link');
+    const closeBtn = document.getElementById(name + '-close');
+    function open(e){ if(e) e.preventDefault(); overlay.hidden = false; document.body.style.overflow = 'hidden'; }
+    function close(){ overlay.hidden = true; document.body.style.overflow = ''; }
+    link.addEventListener('click', open);
+    closeBtn.addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if(e.target === overlay) close(); });
+    document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && !overlay.hidden) close(); });
+    modalOpeners[name] = open;
+  });
+
+  document.getElementById('cookie-datenschutz-link').addEventListener('click', modalOpeners.datenschutz);
+
+  const COOKIE_KEY = 'makerport-cookie-notice-seen';
+  const cookieBanner = document.getElementById('cookie-banner');
+  let cookieNoticeSeen = false;
+  try { cookieNoticeSeen = !!localStorage.getItem(COOKIE_KEY); } catch(err) { cookieNoticeSeen = false; }
+  if(!cookieNoticeSeen){ cookieBanner.hidden = false; }
+  function dismissCookieBanner(choice){
+    cookieBanner.hidden = true;
+    try { localStorage.setItem(COOKIE_KEY, choice); } catch(err) { /* storage unavailable — banner will just reappear next visit */ }
+  }
+  document.getElementById('cookie-accept').addEventListener('click', () => dismissCookieBanner('accepted'));
+  document.getElementById('cookie-necessary').addEventListener('click', () => dismissCookieBanner('necessary-only'));
+})();
+</script>
+</body>
+</html>
