@@ -324,18 +324,22 @@
     color: var(--role-accent);
   }
   @media (max-width:700px){
-    .hero-question{ font-size:1.4rem; }
-    .path-card{ padding:16px 12px; gap:8px; }
-    .path-title{ font-size:0.88rem; }
-    .path-desc{ display:none; }
-    .path-cta{ font-size:0.72rem; }
-    .path-icon{ width:26px; height:26px; border-radius:6px; }
-    .path-icon svg{ width:14px; height:14px; }
-    .paths{ gap:8px; }
-  }
-  @media (max-width:460px){
-    .path-title{ font-size:0.76rem; }
-    .path-card{ padding:12px 8px; }
+    .hero-question{ font-size:1.4rem; margin-bottom:20px; }
+    /* Rollenkarten untereinander: Icon links, Text rechts */
+    .paths{ grid-template-columns:1fr; gap:10px; }
+    .path-card{
+      display:grid;
+      grid-template-columns:auto 1fr;
+      column-gap:14px;
+      row-gap:4px;
+      align-items:start;
+      padding:16px;
+    }
+    .path-icon{ grid-row:1 / span 3; width:40px; height:40px; }
+    .path-icon svg{ width:20px; height:20px; }
+    .path-title{ font-size:1rem; }
+    .path-desc{ font-size:0.85rem; }
+    .path-cta{ padding-top:4px; margin-top:0; font-size:0.8rem; }
   }
 
   /* ---------- Progress rail ---------- */
