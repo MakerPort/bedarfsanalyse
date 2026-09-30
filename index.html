@@ -937,6 +937,7 @@
     setTimeout(() => { t.classList.add('nl-toast-hide'); setTimeout(() => t.remove(), 400); }, 7000);
     t.addEventListener('click', () => t.remove());
   }
+  let newsletterJustConfirmed = false;
   (function handleNewsletterConfirm(){
     const params = new URLSearchParams(location.search);
     const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
@@ -950,7 +951,7 @@
         ? 'Der Bestätigungslink ist abgelaufen. Bitte melde dich einfach erneut an.'
         : 'Dieser Bestätigungslink ist ungültig oder wurde bereits verwendet.');
     } else {
-      showToast('Danke! Deine Newsletter-Anmeldung ist bestätigt.');
+      newsletterJustConfirmed = true;   /* -> Abschluss-Screen statt Startseite */
     }
   })();
 
@@ -1595,6 +1596,7 @@
       ${renderTopbar()}
       <div class="panel-card">
         <div class="panel-head">Danke für dein Engagement!</div>
+        ${newsletterJustConfirmed ? '<p class="panel-sub"><strong>Deine Newsletter-Anmeldung ist bestätigt.</strong></p>' : ''}
         <p class="panel-sub">Du hast uns mit deinen Angaben sehr geholfen. Schau gern auf unserer Website vorbei und entdecke, was im MakerPort gerade passiert.</p>
         <div class="cta-row">
           <a class="btn-cta" href="https://www.makerport.de" target="_blank" rel="noopener">Zur MakerPort-Website</a>
@@ -1736,6 +1738,7 @@
     if(wm) wm.addEventListener('click', restart);
   }
 
+  if(newsletterJustConfirmed) state.stage = 'final';
   render();
 
   const modalOpeners = {};
