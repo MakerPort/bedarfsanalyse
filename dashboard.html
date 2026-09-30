@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>MakerPort — Auswertung</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,300;0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#001f3d;
+    --paper:#F5F8FA;
+    --card:#FFFFFF;
+    --line:#CBD6E2;
+    --muted:#516F90;
+    --orange:#00abbe;      /* Privatpersonen */
+    --orange-dark:#00879a;
+    --teal:#e50066;        /* Unternehmen & Selbstständige */
+    --teal-dark:#b80052;
+    --indigo:#1a3a6c;      /* Angestellte & Fachkräfte */
+    --indigo-dark:#122a4f;
+    --highlight:#fff379;
+    --role-accent: var(--ink);
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Titillium Web',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  #app{ max-width:1000px; margin:0 auto; padding:32px 20px 80px; }
+
+  /* Top bar */
+  .topbar{ display:flex; align-items:center; justify-content:space-between; padding-bottom:20px; margin-bottom:28px; border-bottom:1px solid var(--line); flex-wrap:wrap; gap:12px; }
+  .wordmark{ display:flex; align-items:center; gap:12px; }
+  .wordmark img{ height:40px; width:auto; display:block; }
+  .wordmark .title{ font-weight:600; font-size:1.05rem; color:var(--ink); }
+  .kicker{ font-size:0.8rem; color:var(--ink); font-weight:600; background:var(--highlight); border-radius:12px; padding:4px 12px; }
+  .logout-btn{ font-family:inherit; font-size:0.85rem; font-weight:600; color:var(--muted); background:none; border:1.5px solid var(--line); border-radius:4px; padding:8px 16px; cursor:pointer; }
+  .logout-btn:hover{ border-color:var(--ink); color:var(--ink); }
+
+  /* Login screen */
+  .login-card{ max-width:400px; margin:80px auto; background:var(--card); border:1px solid var(--line); border-radius:8px; padding:36px 32px; box-shadow:0 1px 2px rgba(33,49,74,0.06); }
+  .login-card h1{ font-size:1.3rem; margin:0 0 6px; }
+  .login-card p{ color:var(--muted); font-size:0.9rem; margin:0 0 24px; }
+  .field{ margin-bottom:16px; }
+  .field label{ display:block; font-size:0.82rem; font-weight:600; margin-bottom:6px; color:var(--ink); }
+  .field input{ width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:6px; font-family:inherit; font-size:0.95rem; color:var(--ink); background:var(--card); }
+  .field input:focus{ outline:none; border-color:var(--orange); }
+  .btn-primary{ width:100%; font-family:inherit; font-size:0.92rem; font-weight:600; border:none; cursor:pointer; padding:12px 20px; border-radius:4px; background:var(--orange); color:#fff; transition:background-color .12s ease; }
+  .btn-primary:hover{ background:var(--orange-dark); }
+  .btn-primary:disabled{ background:#CBD6E2; color:#8FA3B8; cursor:not-allowed; }
+  .login-error{ color:var(--teal); font-size:0.85rem; margin-top:12px; display:none; }
+  .login-info{ color:var(--orange-dark); font-size:0.85rem; margin-top:12px; }
+  .link-ghost{ display:block; text-align:right; font-family:inherit; font-size:0.8rem; font-weight:600; color:var(--muted); background:none; border:none; cursor:pointer; margin:-8px 0 16px; padding:0; }
+  .link-ghost:hover{ color:var(--orange); }
+  .link-ghost:disabled{ color:var(--line); cursor:not-allowed; }
+  .login-hint{ font-size:0.78rem; color:var(--muted); margin-top:20px; line-height:1.5; }
+
+  /* Stat cards (clickable, role-colored) */
+  .stat-row{ display:flex; gap:16px; flex-wrap:wrap; margin-bottom:28px; }
+  .stat-card{
+    flex:1; min-width:150px; background:var(--card); border:1px solid var(--line); border-top:4px solid var(--stat-color, var(--line));
+    border-radius:10px; padding:18px; text-align:left; cursor:pointer; font-family:inherit;
+    display:flex; flex-direction:column; gap:12px;
+    transition: box-shadow .15s ease, transform .15s ease;
+  }
+  .stat-card:hover{ box-shadow:0 8px 20px rgba(33,49,74,0.12); transform:translateY(-2px); }
+  .stat-card.active{ box-shadow:0 0 0 2px var(--stat-color, var(--ink)) inset; }
+  .stat-icon{ width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#fff; background:var(--stat-color, var(--ink)); }
+  .stat-icon svg{ width:17px; height:17px; display:block; }
+  .stat-card .num{ font-size:1.7rem; font-weight:700; color:var(--ink); line-height:1; }
+  .stat-card .lbl{ font-size:0.8rem; color:var(--muted); }
+
+  /* Role tabs */
+  .role-tabs{ display:flex; gap:8px; margin-bottom:22px; flex-wrap:wrap; }
+  .role-tab{ display:inline-flex; align-items:center; gap:7px; font-family:inherit; font-size:0.85rem; font-weight:600; padding:8px 16px 8px 12px; border-radius:999px; border:1.5px solid var(--line); background:var(--card); color:var(--ink); cursor:pointer; transition: border-color .12s ease, background-color .12s ease, color .12s ease; }
+  .role-tab svg{ width:15px; height:15px; flex:none; }
+  .role-tab:hover{ border-color:var(--tab-color, var(--ink)); }
+  .role-tab.active{ background:var(--tab-color, var(--ink)); border-color:var(--tab-color, var(--ink)); color:#fff; }
+
+  /* Insight callout */
+  .insight-box{ display:flex; gap:14px; background:var(--highlight); border-radius:10px; padding:18px 20px; margin-bottom:22px; align-items:flex-start; }
+  .insight-icon{ font-size:1.3rem; flex:none; line-height:1.3; }
+  .insight-title{ font-weight:700; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink); margin-bottom:5px; }
+  .insight-text{ font-size:0.94rem; line-height:1.55; color:var(--ink); }
+  .insight-text strong{ color:var(--ink); }
+
+  /* Section shell */
+  .panel{ position:relative; background:var(--card); border:1px solid var(--line); border-radius:10px; padding:28px; margin-bottom:24px; box-shadow:0 1px 3px rgba(33,49,74,0.07); overflow:hidden; }
+  .panel::before{ content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--role-accent); }
+  .panel h2{ font-size:1.1rem; margin:0 0 4px; display:flex; align-items:center; gap:8px; }
+  .panel .panel-meta{ font-size:0.85rem; color:var(--muted); margin-bottom:22px; }
+  .question-block{ margin-bottom:30px; }
+  .question-block:last-child{ margin-bottom:0; }
+  .question-block h3{ font-size:0.95rem; font-weight:600; margin:0 0 14px; color:var(--ink); }
+  .sub-label{ font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.03em; color:var(--muted); margin:28px 0 16px; }
+
+  /* Bar chart */
+  .bar-row{ margin-bottom:12px; }
+  .bar-label{ display:flex; justify-content:space-between; gap:12px; font-size:0.87rem; margin-bottom:5px; }
+  .bar-label .val{ flex:1; }
+  .bar-label .cnt{ flex:none; color:var(--muted); font-weight:600; font-variant-numeric:tabular-nums; }
+  .bar-track{ background:var(--paper); border-radius:999px; height:12px; overflow:hidden; }
+  .bar-fill{ background:var(--role-accent); height:100%; border-radius:999px; transition:width .5s cubic-bezier(.4,0,.2,1); }
+
+  /* Donut chart */
+  .pie-wrap{ display:flex; align-items:center; gap:28px; flex-wrap:wrap; }
+  .pie-holder{ position:relative; width:132px; height:132px; flex:none; }
+  .pie{ width:100%; height:100%; border-radius:50%; }
+  .pie-center{ position:absolute; inset:22%; background:var(--card); border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow: inset 0 0 0 1px var(--line); }
+  .pie-center .pie-total{ font-size:1.25rem; font-weight:700; color:var(--ink); line-height:1; font-variant-numeric:tabular-nums; }
+  .pie-center .pie-sub{ font-size:0.62rem; color:var(--muted); margin-top:3px; text-transform:uppercase; letter-spacing:0.04em; }
+  .pie-legend{ flex:1; min-width:180px; display:flex; flex-direction:column; gap:9px; }
+  .legend-row{ display:flex; align-items:center; gap:9px; font-size:0.87rem; }
+  .legend-dot{ width:10px; height:10px; border-radius:3px; flex:none; }
+  .legend-label{ flex:1; }
+  .legend-val{ color:var(--muted); font-weight:600; font-variant-numeric:tabular-nums; }
+
+  .pill-row{ display:flex; flex-wrap:wrap; gap:9px; margin-top:22px; padding-top:22px; border-top:1px solid var(--line); }
+  .pill-row.plain{ margin-top:0; padding-top:0; border-top:none; }
+  .stat-pill{ display:inline-flex; align-items:center; background:var(--paper); border:1px solid var(--line); border-radius:999px; padding:8px 15px; font-size:0.83rem; color:var(--ink); }
+  .stat-pill strong{ color:var(--role-accent); margin-right:5px; font-weight:700; }
+
+  .interest-pill{ display:inline-flex; align-items:center; gap:8px; background:var(--paper); border:1px solid var(--line); border-radius:999px; padding:7px 8px 7px 14px; font-size:0.82rem; color:var(--ink); }
+  .interest-pill .count{ background:var(--role-accent); color:#fff; border-radius:999px; padding:1px 9px; font-size:0.72rem; font-weight:700; }
+
+  .strip-chart{ display:flex; height:18px; border-radius:5px; overflow:hidden; margin-bottom:10px; }
+  .strip-segment{ height:100%; }
+  .strip-legend{ display:flex; flex-wrap:wrap; gap:6px 16px; font-size:0.8rem; color:var(--muted); }
+  .strip-legend-item{ display:inline-flex; align-items:center; gap:6px; }
+  .strip-legend-item strong{ color:var(--ink); }
+  .strip-dot{ width:8px; height:8px; border-radius:2px; flex:none; }
+
+  .zero-details{ margin-top:8px; }
+  .zero-details summary{ cursor:pointer; font-size:0.8rem; color:var(--muted); font-weight:600; list-style:none; user-select:none; }
+  .zero-details summary::-webkit-details-marker{ display:none; }
+  .zero-details summary::before{ content:'▸ '; }
+  .zero-details[open] summary::before{ content:'▾ '; }
+  .zero-details[open] summary{ margin-bottom:10px; }
+  .zero-details .bar-row, .zero-details .legend-row{ opacity:0.55; }
+  .zero-details .legend-row{ margin-top:8px; }
+
+  .text-list{ display:flex; flex-direction:column; gap:10px; max-height:260px; overflow-y:auto; }
+  .text-item{ font-size:0.88rem; line-height:1.5; padding:12px 14px; background:var(--paper); border-radius:8px; border:1px solid var(--line); }
+  .text-item .meta{ font-size:0.75rem; color:var(--muted); margin-top:5px; }
+  .empty-note{ font-size:0.85rem; color:var(--muted); font-style:italic; }
+
+  table.data-table{ width:100%; border-collapse:collapse; font-size:0.88rem; }
+  table.data-table th{ text-align:left; font-weight:700; color:var(--muted); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.03em; padding:10px 12px; border-bottom:1.5px solid var(--line); }
+  table.data-table td{ padding:11px 12px; border-bottom:1px solid var(--line); color:var(--ink); }
+  table.data-table tr:last-child td{ border-bottom:none; }
+  table.data-table tbody tr:hover{ background:var(--paper); }
+  .table-wrap{ overflow-x:auto; border-radius:8px; }
+
+  .export-row{ display:flex; justify-content:flex-end; gap:8px; margin-bottom:24px; flex-wrap:wrap; }
+  .export-chip{ display:inline-flex; align-items:center; gap:6px; font-family:inherit; font-size:0.78rem; font-weight:600; border:1px solid var(--line); border-radius:6px; padding:7px 12px; background:var(--paper); color:var(--muted); cursor:pointer; transition: border-color .12s ease, color .12s ease, background-color .12s ease; }
+  .export-chip svg{ width:13px; height:13px; flex:none; }
+  .export-chip:hover{ border-color:var(--ink); color:var(--ink); background:var(--card); }
+
+  .export-actions{ display:flex; gap:10px; flex-wrap:wrap; }
+  .export-btn{ font-family:inherit; font-size:0.85rem; font-weight:600; border:1.5px solid var(--line); border-radius:6px; padding:10px 18px; background:var(--card); color:var(--ink); cursor:pointer; transition: border-color .12s ease, background-color .12s ease, color .12s ease; }
+  .export-btn:hover{ border-color:var(--ink); }
+  .export-btn.primary{ background:var(--ink); border-color:var(--ink); color:#fff; }
+  .export-btn.primary:hover{ background:#0a3357; }
+  .export-btn svg{ width:14px; height:14px; vertical-align:-2px; margin-right:6px; }
+
+  .loading{ text-align:center; padding:60px 20px; color:var(--muted); }
+  [hidden]{ display:none !important; }
+
+  @media (max-width:600px){
+    .panel{ padding:20px; }
+    .pie-wrap{ flex-direction:column; align-items:flex-start; }
+    .export-actions{ flex-direction:column; }
+    .export-btn{ width:100%; text-align:center; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="loading" id="initial-loading">Lädt …</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js"></script>
+<script>
+(function(){
+
+  /* TODO: dieselben Werte wie in der Bedarfsanalyse-Seite eintragen
+     (Supabase Dashboard → Project Settings → API) */
+  const SUPABASE_URL = 'https://jgrduxxgxuoxzalafach.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_zm99FWWdNYmn431dGLUunA_kToTuBE5';
+
+  const configured = SUPABASE_URL.indexOf('YOUR-PROJECT-REF') === -1;
+  const sb = (window.supabase && configured) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+  const LOGO_URL = 'https://www.digitalesmv.de/sites/default/files/2024-02/Logo_dmv_makerport_pos_RGB%20%281%29.png';
+
+  const ROLE_LABELS = { privat:'Privatpersonen', fachkraft:'Angestellte & Fachkräfte', b2b:'Unternehmen & Selbstständige' };
+  const ROLE_COLOR = { privat:'var(--orange)', fachkraft:'var(--indigo)', b2b:'var(--teal)', gesamt:'var(--ink)' };
+  const ROLE_ICONS = {
+    gesamt: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-6 4 3 5-8"/></svg>',
+    privat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a5 5 0 0 1 5-5h6a5 5 0 0 1 5 5v1"/></svg>',
+    fachkraft: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18a8 8 0 0 1 16 0"/><path d="M2 18h20"/><path d="M12 10V6"/></svg>',
+    b2b: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="1"/><path d="M9 21v-4h6v4"/><path d="M9 7h1M9 11h1M14 7h1M14 11h1"/></svg>',
+  };
+  const DOWNLOAD_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>';
+
+  /* -----------------------------------------------------------------------
+     Dieselbe Fragebogen-Struktur wie in der Bedarfsanalyse-Seite, damit die
+     Auswertung weiß, wie die gespeicherten answers-Objekte zu lesen sind.
+     "multiple:false" → Tortendiagramm (schließt sich gegenseitig aus),
+     "multiple:true" (Standard bei multi/groups) → Balkendiagramm.
+  ----------------------------------------------------------------------- */
+  const QUESTIONS = {
+    privat: [
+      { id:'anliegen', kind:'multi', title:'Anliegen',
+        options:['Ich möchte eine eigene Idee / ein eigenes Projekt umsetzen.','Ich möchte moderne Technologien ausprobieren.','Ich möchte digitale Kenntnisse aufbauen oder festigen.','Ich möchte mich mit Gleichgesinnten austauschen und vernetzen.','Sonstiges'] },
+      { id:'wissensstand', kind:'single', title:'Wissensstand',
+        options:['Unerfahren','Fortgeschritten','Erfahren'] },
+      { id:'themen', kind:'multi', title:'Themeninteressen',
+        options:['Maker-Equipment','Software & KI','Medien & Design','Gründung','Marketing','Hardware & IoT','Sicherheit & Alltag','Ich bin noch unsicher und möchte mich überraschen lassen.'] },
+      { id:'zeitbudget', kind:'groups', title:'Zeitbudget & Format', groups:[
+        { key:'wochentage', label:'Wochentage', multiple:true, options:['Mo','Di','Mi','Do','Fr','Sa','So'] },
+        { key:'tageszeit', label:'Tageszeit', multiple:true, options:['Vormittags','Nachmittags','Abends'] },
+        { key:'dauer', label:'Dauer', multiple:true, options:['ca. 1 Stunde','2–3 Stunden','Tages-Workshop'] },
+        { key:'haeufigkeit', label:'Häufigkeit', multiple:true, options:['Spontan','Wöchentlich','Monatlich'] },
+        { key:'format', label:'Format', multiple:true, options:['Offene Werkstatt','Vor-Ort-Workshop','Webinar / Online','Meetup & Netzwerk'] },
+      ] },
+      { id:'abschluss', kind:'text', title:'Offene Anmerkungen' },
+    ],
+    fachkraft: [
+      { id:'anliegen', kind:'multi', title:'Anliegen',
+        options:['Arbeitsabläufe vereinfachen & automatisieren','Neue Tools & Methoden für den Job erlernen','Konkretes Projekt / Prototyp für die Firma umsetzen','Netzwerken & Austausch mit anderen Fachkräften','Sonstiges'] },
+      { id:'wissensstand', kind:'single', title:'Wissensstand',
+        options:['Unerfahren','Fortgeschritten','Erfahren'] },
+      { id:'themen', kind:'multi', title:'Themeninteressen',
+        options:['KI & Automatisierung','Agile Methoden','Prototyping & Tech','Daten & Software','Marketing & Content','Noch unsicher / Offen für neue Trends'] },
+      { id:'zeitbudget', kind:'groups', title:'Zeitbudget & Format', groups:[
+        { key:'wochentage', label:'Wochentage', multiple:true, options:['Mo','Di','Mi','Do','Fr','Sa','So'] },
+        { key:'tageszeit', label:'Tageszeit', multiple:true, options:['Vormittags','Nachmittags','Abends'] },
+        { key:'dauer', label:'Dauer', multiple:true, options:['ca. 1 Stunde','2–3 Stunden','Tages-Workshop'] },
+        { key:'haeufigkeit', label:'Häufigkeit', multiple:true, options:['Einmalig / Nach Bedarf','Monatlich','Quartalsweise'] },
+        { key:'format', label:'Format', multiple:true, options:['Offene Werkstatt','Vor-Ort-Workshop','Webinar / Online','Meetup & Netzwerk'] },
+      ] },
+      { id:'abschluss', kind:'text', title:'Offene Anmerkungen' },
+    ],
+    b2b: [
+      { id:'anliegen', kind:'multi', title:'Anliegen',
+        options:['Geschäftsmodelle & Angebote digitalisieren','Unternehmensprozesse optimieren & automatisieren','Neue Produkte/Service-Ideen testen (Prototyping)','Fachkräfte & Talente finden (Employer Branding)','Innovationskultur & Skills im Team stärken','Sonstiges'] },
+      { id:'reifegrad', kind:'single', title:'Digitaler Reifegrad',
+        options:['Einstieg','Fortgeschritten','Pionier'] },
+      { id:'themen', kind:'multi', title:'Themeninteressen',
+        options:['KI & Effizienz','Produktentwicklung','Strategie & Innovation','IT-Sicherheit & Daten','Sichtbarkeit & Recruiting','Bedarfsorientierte Individuallösungen'] },
+      { id:'zeitbudget', kind:'groups', title:'Zeitbudget & Format', groups:[
+        { key:'wochentage', label:'Wochentage', multiple:true, options:['Mo','Di','Mi','Do','Fr','Sa','So'] },
+        { key:'tageszeit', label:'Tageszeit', multiple:true, options:['Morgens','Tagsüber','Abends'] },
+        { key:'dauer', label:'Dauer', multiple:true, options:['Impulse & Pitch-Formate (1–2 Stunden)','Halbtags-Workshops (3–4 Stunden)','Tages-Inkubator / Sprint'] },
+        { key:'haeufigkeit', label:'Häufigkeit', multiple:true, options:['Einmalig / Nach Bedarf','Regelmäßig','Quartalsweise'] },
+        { key:'format', label:'Format', multiple:true, options:['Exklusiver Inhouse-Workshop / Firmenschulung','B2B-Netzwerk- & Matchmaking-Events','Strategie-Sparring & Fachberatung','Hackathons & Challenges'] },
+      ] },
+      { id:'abschluss', kind:'text', title:'Offene Anmerkungen' },
+    ],
+  };
+
+  const BONUS_GROUPS = {
+    privat: [
+      { key:'alter', label:'Alter', multiple:false, options:['unter 18','18–24','25–34','35–44','45–54','55+'] },
+      { key:'ort', label:'Wohnort', type:'text' },
+      { key:'beruf', label:'Beruflicher Hintergrund', multiple:true, options:['Schüler:in / Student:in','Angestellte:r','Selbstständig / Freiberuflich','Unternehmer:in','Sonstiges'] },
+      { key:'geschlecht', label:'Geschlecht', multiple:false, options:['Weiblich','Männlich','Divers','Keine Angabe'] },
+      { key:'interessen', label:'Interessen', multiple:true, options:['Technologie & Programmierung','Design & Kreativität','Handwerk & Prototyping','Business & Gründung','Nachhaltigkeit','Sonstiges'] },
+      { key:'quelle', label:'Wie hast du von uns erfahren?', multiple:false, options:['Social Media','Empfehlung','Suchmaschine','Veranstaltung / Messe','Presse / Blog','Sonstiges'] },
+    ],
+    fachkraft: [
+      { key:'alter', label:'Alter', multiple:false, options:['unter 18','18–24','25–34','35–44','45–54','55+'] },
+      { key:'ort', label:'Arbeitsort', type:'text' },
+      { key:'position', label:'Position', multiple:false, options:['Berufseinsteiger:in / Azubi','Fachkraft / Spezialist:in','Teamleitung','(Abteilungs-)Leitung','Geschäftsführung','Sonstiges'] },
+      { key:'branche', label:'Branche', multiple:false, options:['Industrie / Produktion','IT / Software','Handel','Dienstleistung','Verwaltung','Tourismus','Landwirtschaft','Handwerk','Sonstiges'] },
+      { key:'geschlecht', label:'Geschlecht', multiple:false, options:['Weiblich','Männlich','Divers','Keine Angabe'] },
+      { key:'interessen', label:'Interessen', multiple:true, options:['Technologie & Programmierung','Design & Kreativität','Handwerk & Prototyping','Business & Gründung','Nachhaltigkeit','Sonstiges'] },
+      { key:'quelle', label:'Wie hast du von uns erfahren?', multiple:false, options:['Social Media','Empfehlung','Suchmaschine','Veranstaltung / Messe','Presse / Blog','Sonstiges'] },
+    ],
+    b2b: [
+      { key:'unternehmensgroesse', label:'Unternehmensgröße', multiple:false, options:['1–9 Mitarbeitende','10–49 Mitarbeitende','50–249 Mitarbeitende','250+ Mitarbeitende'] },
+      { key:'ort', label:'Standort des Unternehmens', type:'text' },
+      { key:'branche', label:'Branche', multiple:false, options:['Industrie / Produktion','IT / Software','Handel','Dienstleistung','Verwaltung','Tourismus','Landwirtschaft','Handwerk','Sonstiges'] },
+      { key:'position', label:'Position im Unternehmen', multiple:false, options:['Geschäftsführung','Innovationsmanagement','Personalabteilung','Sonstiges'] },
+      { key:'quelle', label:'Wie hast du von uns erfahren?', multiple:false, options:['Social Media','Empfehlung','Suchmaschine','Veranstaltung / Messe','Presse / Blog','Sonstiges'] },
+    ],
+  };
+
+  let data = { submissions:[], bonus:[], recommendations:[], newsletter:[] };
+  let activeRole = 'gesamt';
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function fmtDate(iso){
+    try { return new Date(iso).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }); }
+    catch(e){ return iso; }
+  }
+
+  /* ---------------- Aggregation ---------------- */
+
+  function aggregateFlat(rows, key, options){
+    const counts = {};
+    options.forEach(o => { counts[o] = 0; });
+    rows.forEach(r => {
+      const val = r.answers ? r.answers[key] : null;
+      if(val == null) return;
+      if(Array.isArray(val)){
+        val.forEach(v => { counts[v] = (counts[v]||0) + 1; });
+      } else if(val !== ''){
+        counts[val] = (counts[val]||0) + 1;
+      }
+    });
+    return counts;
+  }
+
+  function topOption(rows, key){
+    const counts = {};
+    rows.forEach(r => {
+      const val = r.answers ? r.answers[key] : null;
+      if(Array.isArray(val)) val.forEach(v => { counts[v] = (counts[v]||0)+1; });
+      else if(val) counts[val] = (counts[val]||0)+1;
+    });
+    let best = null, bestCount = 0;
+    Object.entries(counts).forEach(([k,c]) => { if(c > bestCount){ best = k; bestCount = c; } });
+    return best;
+  }
+
+  /* ---------------- Charts ---------------- */
+
+  function renderBars(counts, base){
+    const entries = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+    const nonZero = entries.filter(([,c]) => c > 0);
+    const zero = entries.filter(([,c]) => c === 0);
+    const max = Math.max(1, ...nonZero.map(([,c]) => c));
+    function row([label, count]){
+      const pct = base > 0 ? Math.round((count / base) * 100) : 0;
+      const width = Math.round((count / max) * 100);
+      return `
+        <div class="bar-row">
+          <div class="bar-label"><span class="val">${escapeHtml(label)}</span><span class="cnt">${count} (${pct}%)</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:${width}%"></div></div>
+        </div>`;
+    }
+    let html = nonZero.map(row).join('');
+    if(zero.length){
+      html += `<details class="zero-details"><summary>${zero.length} Antwortoption${zero.length===1?'':'en'} ohne Nennungen</summary>${zero.map(row).join('')}</details>`;
+    }
+    return html;
+  }
+
+  const PIE_SHADE_STEPS = [100, 75, 55, 38, 24, 14];
+  function shadeFor(i, colorVar){
+    const pct = PIE_SHADE_STEPS[i % PIE_SHADE_STEPS.length];
+    return `color-mix(in srgb, ${colorVar} ${pct}%, white)`;
+  }
+
+  function renderPie(counts, colorVar){
+    colorVar = colorVar || 'var(--role-accent)';
+    const allEntries = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+    const nonZero = allEntries.filter(([,c]) => c > 0);
+    const zero = allEntries.filter(([,c]) => c === 0);
+    const total = nonZero.reduce((s,[,c]) => s+c, 0);
+    if(!total) return `<div class="empty-note">Keine Angaben.</div>`;
+    let acc = 0;
+    const stops = nonZero.map(([label,count], i) => {
+      const start = acc / total * 100; acc += count; const end = acc / total * 100;
+      return `${shadeFor(i, colorVar)} ${start}% ${end}%`;
+    }).join(', ');
+    const legend = nonZero.map(([label,count], i) => `
+      <div class="legend-row"><span class="legend-dot" style="background:${shadeFor(i, colorVar)}"></span><span class="legend-label">${escapeHtml(label)}</span><span class="legend-val">${count} (${Math.round(count/total*100)}%)</span></div>
+    `).join('');
+    const zeroHtml = zero.length ? `
+      <details class="zero-details">
+        <summary>${zero.length} Option${zero.length===1?'':'en'} ohne Nennungen</summary>
+        ${zero.map(([label]) => `<div class="legend-row zero"><span class="legend-dot" style="background:var(--line)"></span><span class="legend-label">${escapeHtml(label)}</span><span class="legend-val">0 (0%)</span></div>`).join('')}
+      </details>` : '';
+    return `<div class="pie-wrap">
+      <div class="pie-holder">
+        <div class="pie" style="background:conic-gradient(${stops})"></div>
+        <div class="pie-center"><div class="pie-total">${total}</div><div class="pie-sub">Antworten</div></div>
+      </div>
+      <div class="pie-legend">${legend}${zeroHtml}</div>
+    </div>`;
+  }
+
+  function renderStrip(counts, colorVar){
+    colorVar = colorVar || 'var(--role-accent)';
+    const entries = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+    const nonZero = entries.filter(([,c]) => c > 0);
+    const total = nonZero.reduce((s,[,c]) => s+c, 0);
+    if(!total) return `<div class="empty-note">Keine Angaben.</div>`;
+    const segments = nonZero.map(([label,count], i) =>
+      `<div class="strip-segment" style="width:${count/total*100}%; background:${shadeFor(i, colorVar)}" title="${escapeHtml(label)}: ${count} (${Math.round(count/total*100)}%)"></div>`
+    ).join('');
+    const legend = nonZero.map(([label,count], i) =>
+      `<span class="strip-legend-item"><span class="strip-dot" style="background:${shadeFor(i, colorVar)}"></span>${escapeHtml(label)} <strong>${Math.round(count/total*100)}%</strong></span>`
+    ).join('');
+    return `<div class="strip-chart">${segments}</div><div class="strip-legend">${legend}</div>`;
+  }
+
+  function renderInterestPills(counts){
+    const entries = Object.entries(counts).sort((a,b) => b[1]-a[1]).filter(([,c]) => c > 0);
+    if(!entries.length) return `<div class="empty-note">Keine Angaben.</div>`;
+    return `<div class="pill-row plain">${entries.map(([label,count]) =>
+      `<span class="interest-pill">${escapeHtml(label)}<span class="count">${count}</span></span>`
+    ).join('')}</div>`;
+  }
+
+  function renderTextList(rows, key){
+    const items = rows
+      .map(r => ({ text: r.answers ? (r.answers[key] || '').trim() : '', date: r.created_at }))
+      .filter(x => x.text);
+    if(!items.length) return `<div class="empty-note">Keine Angaben.</div>`;
+    return `<div class="text-list">${items.map(x => `
+      <div class="text-item">${escapeHtml(x.text)}<div class="meta">${fmtDate(x.date)}</div></div>
+    `).join('')}</div>`;
+  }
+
+  /* ---------------- Insight (Ableitung) ---------------- */
+
+  function renderRoleInsight(rows, roleLabel){
+    if(rows.length < 3) return ''; // zu wenig Daten für eine belastbare Aussage
+    const topThema = topOption(rows, 'themen');
+    const topFormat = topOption(rows, 'zeitbudget__format');
+    const topHaeufigkeit = topOption(rows, 'zeitbudget__haeufigkeit');
+    if(!topThema || !topFormat || !topHaeufigkeit) return '';
+    const comboCount = rows.filter(r => {
+      const a = r.answers || {};
+      return (a.themen||[]).includes(topThema) && (a.zeitbudget__format||[]).includes(topFormat) && (a.zeitbudget__haeufigkeit||[]).includes(topHaeufigkeit);
+    }).length;
+    const pct = Math.round(comboCount / rows.length * 100);
+    if(pct < 15) return '';
+    return `
+      <div class="insight-box">
+        <div class="insight-icon">💡</div>
+        <div>
+          <div class="insight-title">Ableitung</div>
+          <div class="insight-text">Es würde sich folgendes Format lohnen: <strong>${escapeHtml(topFormat)}</strong> zum Thema „${escapeHtml(topThema)}" — ${escapeHtml(topHaeufigkeit)}. Übereinstimmung mit <strong>${pct}%</strong> der ${escapeHtml(roleLabel)} (${comboCount} von ${rows.length}).</div>
+        </div>
+      </div>`;
+  }
+
+  function renderGesamtInsight(){
+    const total = data.submissions.length;
+    if(!total) return '';
+    const roleCounts = { privat:0, fachkraft:0, b2b:0 };
+    data.submissions.forEach(r => { if(roleCounts[r.role] !== undefined) roleCounts[r.role]++; });
+    const topRole = Object.entries(roleCounts).sort((a,b) => b[1]-a[1])[0];
+    const recRows = data.recommendations;
+    const jaCount = recRows.filter(r => r.recommend === 'ja').length;
+    const recPct = recRows.length ? Math.round(jaCount/recRows.length*100) : null;
+    const newsPct = total ? Math.round(data.newsletter.length / total * 100) : 0;
+    return `
+      <div class="insight-box">
+        <div class="insight-icon">💡</div>
+        <div>
+          <div class="insight-title">Ableitung</div>
+          <div class="insight-text">
+            <strong>${escapeHtml(ROLE_LABELS[topRole[0]])}</strong> sind aktuell eure aktivste Zielgruppe (${topRole[1]} von ${total} Fragebögen).
+            ${recPct !== null ? ` <strong>${recPct}%</strong> aller Teilnehmenden würden den MakerPort weiterempfehlen.` : ''}
+            Rund <strong>${newsPct}%</strong> der Teilnahmen führten zu einer Newsletter-Anmeldung.
+          </div>
+        </div>
+      </div>`;
+  }
+
+  /* Normalisiert die pro Rolle unterschiedlich benannte Erfahrungsfrage
+     (wissensstand bei privat/fachkraft, reifegrad bei b2b) auf eine
+     gemeinsame 1–3-Skala, damit rollenübergreifend verglichen werden kann. */
+  function normalizedExperience(row){
+    const a = row.answers || {};
+    if(row.role === 'b2b'){
+      if(a.reifegrad === 'Pionier') return 3;
+      if(a.reifegrad === 'Fortgeschritten') return 2;
+      if(a.reifegrad === 'Einstieg') return 1;
+    } else {
+      if(a.wissensstand === 'Erfahren') return 3;
+      if(a.wissensstand === 'Fortgeschritten') return 2;
+      if(a.wissensstand === 'Unerfahren') return 1;
+    }
+    return null;
+  }
+
+  function topWithPct(rows, key){
+    const top = topOption(rows, key);
+    if(!top) return null;
+    const count = rows.filter(r => (r.answers && r.answers[key] || []).includes(top)).length;
+    return { top, count, pct: Math.round(count / rows.length * 100) };
+  }
+
+  function renderStatPills(){
+    const rows = data.submissions;
+    const total = rows.length;
+    if(!total) return '';
+    const pills = [];
+    const experienced = rows.filter(r => normalizedExperience(r) === 3);
+    const erfahrenPct = Math.round(experienced.length / total * 100);
+    pills.push(`<span class="stat-pill"><strong>${erfahrenPct}%</strong> davon erfahren</span>`);
+    if(experienced.length >= 3){
+      const fmt = topWithPct(experienced, 'zeitbudget__format');
+      const freq = topWithPct(experienced, 'zeitbudget__haeufigkeit');
+      if(fmt && fmt.pct >= 30) pills.push(`<span class="stat-pill"><strong>${fmt.pct}%</strong> davon präferieren „${escapeHtml(fmt.top)}"</span>`);
+      if(freq && freq.pct >= 30) pills.push(`<span class="stat-pill"><strong>${freq.pct}%</strong> davon präferieren „${escapeHtml(freq.top)}"</span>`);
+    }
+    const recRows = data.recommendations;
+    if(recRows.length){
+      const jaPct = Math.round(recRows.filter(r => r.recommend === 'ja').length / recRows.length * 100);
+      pills.push(`<span class="stat-pill"><strong>${jaPct}%</strong> empfehlen weiter</span>`);
+    }
+    if(pills.length < 2) return '';
+    return `<div class="pill-row">${pills.join('')}</div>`;
+  }
+
+  /* ---------------- Sections ---------------- */
+
+  function renderQuestionBlock(q, rows){
+    if(q.kind === 'single'){
+      const counts = aggregateFlat(rows, q.id, q.options);
+      return `<div class="question-block"><h3>${escapeHtml(q.title)}</h3>${renderPie(counts)}</div>`;
+    }
+    if(q.kind === 'multi'){
+      const counts = aggregateFlat(rows, q.id, q.options);
+      return `<div class="question-block"><h3>${escapeHtml(q.title)}</h3>${renderBars(counts, rows.length)}</div>`;
+    }
+    if(q.kind === 'groups'){
+      const groupHtml = q.groups.map(g => {
+        const fullKey = q.id + '__' + g.key;
+        const counts = aggregateFlat(rows, fullKey, g.options);
+        return `<div class="sub-label">${escapeHtml(g.label)}</div>${g.multiple === false ? renderPie(counts) : renderBars(counts, rows.length)}`;
+      }).join('');
+      return `<div class="question-block"><h3>${escapeHtml(q.title)}</h3>${groupHtml}</div>`;
+    }
+    if(q.kind === 'text'){
+      return `<div class="question-block"><h3>${escapeHtml(q.title)}</h3>${renderTextList(rows, q.id)}</div>`;
+    }
+    return '';
+  }
+
+  function renderQuestionnaireSection(role){
+    const rows = data.submissions.filter(r => r.role === role);
+    const qs = QUESTIONS[role];
+    if(!rows.length){
+      return `<div class="panel"><h2>Fragebogen-Auswertung</h2><div class="panel-meta">${ROLE_LABELS[role]}</div><div class="empty-note">Noch keine Antworten für diese Rolle.</div></div>`;
+    }
+    const blocks = qs.map(q => renderQuestionBlock(q, rows)).join('');
+    return `<div class="panel"><h2>Fragebogen-Auswertung</h2><div class="panel-meta">${ROLE_LABELS[role]} · ${rows.length} Teilnahme${rows.length===1?'':'n'}</div>${blocks}</div>`;
+  }
+
+  /* Freitext-Orte: Schreibweisen zusammenfassen ("wolgast", "Wolgast ") und nach Häufigkeit sortieren */
+  function renderPlaceList(rows, key){
+    const groups = {};
+    rows.forEach(r => {
+      const raw = r.answers && typeof r.answers[key] === 'string' ? r.answers[key].trim() : '';
+      if(!raw) return;
+      const norm = raw.toLocaleLowerCase('de-DE').replace(/\s+/g, ' ');
+      if(!groups[norm]) groups[norm] = { label: raw, count: 0 };
+      groups[norm].count++;
+    });
+    const list = Object.values(groups).sort((a,b) => b.count - a.count || a.label.localeCompare(b.label, 'de'));
+    if(!list.length) return `<div class="empty-note">Noch keine Angaben.</div>`;
+    const answered = list.reduce((n,x) => n + x.count, 0);
+    const counts = {};
+    list.slice(0, 15).forEach(x => { counts[x.label] = x.count; });
+    const more = list.length > 15 ? `<div class="empty-note" style="margin-top:8px;">+ ${list.length - 15} weitere Orte (vollständig im Excel-Export)</div>` : '';
+    return renderBars(counts, answered) + more;
+  }
+
+  function renderBonusSection(role){
+    const rows = data.bonus.filter(r => r.role === role);
+    const groups = BONUS_GROUPS[role];
+    if(!rows.length){
+      return `<div class="panel"><h2>Zusatzangaben</h2><div class="panel-meta">${ROLE_LABELS[role]}</div><div class="empty-note">Noch keine Zusatzangaben für diese Rolle.</div></div>`;
+    }
+    const blocks = groups.map(g => {
+      if(g.type === 'text') return `<div class="question-block"><h3>${escapeHtml(g.label)}</h3>${renderPlaceList(rows, g.key)}</div>`;
+      const counts = aggregateFlat(rows, g.key, g.options);
+      return `<div class="question-block"><h3>${escapeHtml(g.label)}</h3>${g.multiple === false ? renderPie(counts) : renderBars(counts, rows.length)}</div>`;
+    }).join('');
+    return `<div class="panel"><h2>Zusatzangaben</h2><div class="panel-meta">${ROLE_LABELS[role]} · ${rows.length} Teilnehmende mit Angaben</div>${blocks}</div>`;
+  }
+
+  function renderRoleDistribution(){
+    const roleCounts = { privat:0, fachkraft:0, b2b:0 };
+    data.submissions.forEach(r => { if(roleCounts[r.role] !== undefined) roleCounts[r.role]++; });
+    const total = data.submissions.length;
+    if(!total){
+      return `<div class="panel"><h2>Rollenverteilung</h2><div class="empty-note">Noch keine Fragebögen vorhanden.</div></div>`;
+    }
+    const entries = Object.entries(roleCounts).filter(([,c]) => c > 0);
+    let acc = 0;
+    const stops = entries.map(([role,count]) => {
+      const start = acc/total*100; acc += count; const end = acc/total*100;
+      return `${ROLE_COLOR[role]} ${start}% ${end}%`;
+    }).join(', ');
+    const legend = entries.map(([role,count]) => `
+      <div class="legend-row"><span class="legend-dot" style="background:${ROLE_COLOR[role]}"></span><span class="legend-label">${ROLE_LABELS[role]}</span><span class="legend-val">${count} (${Math.round(count/total*100)}%)</span></div>
+    `).join('');
+    return `<div class="panel"><h2>Rollenverteilung</h2><div class="panel-meta">${total} Fragebögen gesamt</div>
+      <div class="pie-wrap">
+        <div class="pie-holder">
+          <div class="pie" style="background:conic-gradient(${stops})"></div>
+          <div class="pie-center"><div class="pie-total">${total}</div><div class="pie-sub">Gesamt</div></div>
+        </div>
+        <div class="pie-legend">${legend}</div>
+      </div>
+      ${renderStatPills()}
+    </div>`;
+  }
+
+  function renderDemographicsOverview(){
+    const rows = data.bonus.filter(r => r.role === 'privat' || r.role === 'fachkraft');
+    if(!rows.length){
+      return `<div class="panel" style="--role-accent:var(--indigo)"><h2>Zusatzangaben — Privatpersonen &amp; Fachkräfte</h2><div class="empty-note">Noch keine Zusatzangaben vorhanden.</div></div>`;
+    }
+    const geschlechtCounts = aggregateFlat(rows, 'geschlecht', ['Weiblich','Männlich','Divers','Keine Angabe']);
+    const alterCounts = aggregateFlat(rows, 'alter', ['unter 18','18–24','25–34','35–44','45–54','55+']);
+    const interessenCounts = aggregateFlat(rows, 'interessen', ['Technologie & Programmierung','Design & Kreativität','Handwerk & Prototyping','Business & Gründung','Nachhaltigkeit','Sonstiges']);
+    return `<div class="panel" style="--role-accent:var(--indigo)">
+      <h2>Zusatzangaben — Privatpersonen &amp; Fachkräfte</h2>
+      <div class="panel-meta">${rows.length} Teilnehmende</div>
+      <div class="sub-label" style="margin-top:0;">Geschlecht</div>
+      ${renderPie(geschlechtCounts)}
+      <div class="sub-label">Alter</div>
+      ${renderStrip(alterCounts)}
+      <div class="sub-label">Interessen</div>
+      ${renderInterestPills(interessenCounts)}
+    </div>`;
+  }
+
+  function renderCompanyOverview(){
+    const rows = data.bonus.filter(r => r.role === 'b2b');
+    if(!rows.length){
+      return `<div class="panel" style="--role-accent:var(--teal)"><h2>Zusatzangaben — Unternehmen</h2><div class="empty-note">Noch keine Zusatzangaben vorhanden.</div></div>`;
+    }
+    const brancheCounts = aggregateFlat(rows, 'branche', ['Industrie / Produktion','IT / Software','Handel','Dienstleistung','Verwaltung','Tourismus','Landwirtschaft','Handwerk','Sonstiges']);
+    const groesseCounts = aggregateFlat(rows, 'unternehmensgroesse', ['1–9 Mitarbeitende','10–49 Mitarbeitende','50–249 Mitarbeitende','250+ Mitarbeitende']);
+    return `<div class="panel" style="--role-accent:var(--teal)">
+      <h2>Zusatzangaben — Unternehmen</h2>
+      <div class="panel-meta">${rows.length} Teilnehmende</div>
+      <div class="sub-label" style="margin-top:0;">Branche</div>
+      ${renderInterestPills(brancheCounts)}
+      <div class="sub-label">Mitarbeiteranzahl</div>
+      ${renderStrip(groesseCounts)}
+    </div>`;
+  }
+
+  function renderRecommendSection(){
+    const rows = data.recommendations;
+    const ja = rows.filter(r => r.recommend === 'ja').length;
+    const nein = rows.filter(r => r.recommend === 'nein').length;
+    const feedbackItems = rows.filter(r => r.feedback && r.feedback.trim());
+    const counts = { 'Ja': ja, 'Nein': nein };
+    return `
+      <div class="panel">
+        <h2>Weiterempfehlung</h2>
+        <div class="panel-meta">${rows.length} Antworten insgesamt (alle Rollen)</div>
+        ${renderPie(counts)}
+        <div class="sub-label">Verbesserungsvorschläge (bei „Nein")</div>
+        ${feedbackItems.length
+          ? `<div class="text-list">${feedbackItems.map(r => `<div class="text-item">${escapeHtml(r.feedback)}<div class="meta">${fmtDate(r.created_at)}</div></div>`).join('')}</div>`
+          : `<div class="empty-note">Kein Feedback vorhanden.</div>`}
+      </div>`;
+  }
+
+  function csvEscape(v){
+    const s = String(v == null ? '' : v);
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+  }
+
+  function downloadBlob(content, filename, mime){
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function submissionsToCsv(rows){
+    const answerKeys = new Set();
+    rows.forEach(r => Object.keys(r.answers || {}).forEach(k => answerKeys.add(k)));
+    const keys = Array.from(answerKeys).sort();
+    const header = ['id','session_id','role','created_at', ...keys];
+    const lines = [header.map(csvEscape).join(',')];
+    rows.forEach(r => {
+      const a = r.answers || {};
+      const row = [r.id, r.session_id, r.role, r.created_at, ...keys.map(k => {
+        const v = a[k];
+        return Array.isArray(v) ? v.join('; ') : (v == null ? '' : v);
+      })];
+      lines.push(row.map(csvEscape).join(','));
+    });
+    return lines.join('\n');
+  }
+
+  function currentRoleSubmissions(){
+    return activeRole === 'gesamt' ? data.submissions : data.submissions.filter(r => r.role === activeRole);
+  }
+
+  function submissionsToRows(rows){
+    const answerKeys = new Set();
+    rows.forEach(r => Object.keys(r.answers || {}).forEach(k => answerKeys.add(k)));
+    const keys = Array.from(answerKeys).sort();
+    return rows.map(r => {
+      const obj = { id: r.id, session_id: r.session_id, role: r.role, created_at: r.created_at };
+      keys.forEach(k => {
+        const v = (r.answers || {})[k];
+        obj[k] = Array.isArray(v) ? v.join('; ') : (v == null ? '' : v);
+      });
+      return obj;
+    });
+  }
+
+  function exportSubmissionsCsv(){
+    downloadBlob(submissionsToCsv(currentRoleSubmissions()), 'makerport-fragebogen-' + activeRole + '.csv', 'text/csv;charset=utf-8;');
+  }
+
+  function exportSubmissionsExcel(){
+    const ws = XLSX.utils.json_to_sheet(submissionsToRows(currentRoleSubmissions()));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Fragebögen');
+    XLSX.writeFile(wb, 'makerport-fragebogen-' + activeRole + '.xlsx');
+  }
+
+  function exportAllExcel(){
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(submissionsToRows(data.submissions)), 'Fragebögen');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(submissionsToRows(data.bonus)), 'Zusatzangaben');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data.recommendations.map(r => ({ id:r.id, session_id:r.session_id, created_at:r.created_at, recommend:r.recommend, feedback:r.feedback||'' }))), 'Empfehlungen');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data.newsletter.map(r => ({ email:r.email, source:r.source||'', angemeldet_am:r.created_at, bestaetigt_am:r.confirmed_at }))), 'Newsletter');
+    XLSX.writeFile(wb, 'makerport-rohdaten-komplett.xlsx');
+  }
+
+  function exportNewsletterCsv(){
+    const rows = data.newsletter;
+    const header = ['email','source','angemeldet_am','bestaetigt_am'];
+    const lines = [header.join(',')].concat(
+      rows.map(r => [csvEscape(r.email), csvEscape(r.source), csvEscape(r.created_at), csvEscape(r.confirmed_at)].join(','))
+    );
+    downloadBlob(lines.join('\n'), 'makerport-newsletter-anmeldungen.csv', 'text/csv;charset=utf-8;');
+  }
+
+  function exportNewsletterExcel(){
+    const ws = XLSX.utils.json_to_sheet(data.newsletter.map(r => ({ email:r.email, source:r.source||'', angemeldet_am:r.created_at, bestaetigt_am:r.confirmed_at })));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Newsletter');
+    XLSX.writeFile(wb, 'makerport-newsletter-anmeldungen.xlsx');
+  }
+
+  function renderNewsletterSection(){
+    const rows = data.newsletter;
+    const rowsHtml = rows.length
+      ? rows.map(r => `<tr><td>${escapeHtml(r.email)}</td><td>${escapeHtml(r.source||'—')}</td><td>${fmtDate(r.confirmed_at)}</td></tr>`).join('')
+      : `<tr><td colspan="3"><span class="empty-note">Noch keine Newsletter-Anmeldungen.</span></td></tr>`;
+    return `
+      <div class="panel">
+        <h2>Newsletter-Anmeldungen</h2>
+        <div class="panel-meta">${rows.length} bestätigte Anmeldung${rows.length===1?'':'en'} (Double-Opt-in)</div>
+        ${rows.length ? `<div class="export-actions" style="margin-bottom:16px;"><button class="export-btn" id="export-csv-btn" type="button">Als CSV exportieren</button><button class="export-btn" id="export-xlsx-btn2" type="button">Als Excel exportieren</button></div>` : ''}
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>E-Mail</th><th>Quelle</th><th>Bestätigt am</th></tr></thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+        </div>
+      </div>`;
+  }
+
+  function renderStatCards(){
+    const total = data.submissions.length;
+    const byRole = { privat:0, fachkraft:0, b2b:0 };
+    data.submissions.forEach(r => { if(byRole[r.role] !== undefined) byRole[r.role]++; });
+    const cards = [
+      { role:'gesamt', num:total, lbl:'Fragebögen gesamt' },
+      { role:'privat', num:byRole.privat, lbl:'Privatpersonen' },
+      { role:'fachkraft', num:byRole.fachkraft, lbl:'Fachkräfte' },
+      { role:'b2b', num:byRole.b2b, lbl:'Unternehmen' },
+    ];
+    return `<div class="stat-row">${cards.map(c => `
+      <button class="stat-card${activeRole===c.role?' active':''}" data-role="${c.role}" style="--stat-color:${ROLE_COLOR[c.role]}" type="button">
+        <div class="stat-icon">${ROLE_ICONS[c.role]}</div>
+        <div><div class="num">${c.num}</div><div class="lbl">${c.lbl}</div></div>
+      </button>
+    `).join('')}</div>`;
+  }
+
+  function renderExportRow(){
+    return `
+      <div class="export-row">
+        <button class="export-chip" id="export-csv-btn2" type="button" title="Fragebogen-Antworten als CSV">${DOWNLOAD_ICON} CSV</button>
+        <button class="export-chip" id="export-xlsx-btn" type="button" title="Fragebogen-Antworten als Excel">${DOWNLOAD_ICON} Excel</button>
+        <button class="export-chip" id="export-all-btn" type="button" title="Alle Rohdaten (Fragebögen, Zusatzangaben, Empfehlungen, Newsletter) als Excel-Arbeitsmappe mit mehreren Tabellenblättern">${DOWNLOAD_ICON} Alles (Excel)</button>
+      </div>`;
+  }
+
+  function renderDashboard(){
+    document.documentElement.style.setProperty('--role-accent', ROLE_COLOR[activeRole]);
+    const app = document.getElementById('app');
+    const tabs = ['gesamt','privat','fachkraft','b2b'].map(r =>
+      `<button class="role-tab${activeRole===r?' active':''}" data-role="${r}" style="--tab-color:${ROLE_COLOR[r]}">${ROLE_ICONS[r]}${r==='gesamt'?'Gesamt':ROLE_LABELS[r]}</button>`
+    ).join('');
+
+    const insightHtml = activeRole === 'gesamt'
+      ? renderGesamtInsight()
+      : renderRoleInsight(data.submissions.filter(r => r.role === activeRole), ROLE_LABELS[activeRole]);
+
+    const detailHtml = activeRole === 'gesamt'
+      ? renderRoleDistribution() + renderDemographicsOverview() + renderCompanyOverview()
+      : renderQuestionnaireSection(activeRole) + renderBonusSection(activeRole);
+
+    app.innerHTML = `
+      <div class="topbar">
+        <div class="wordmark"><img src="${LOGO_URL}" alt="MakerPort Logo" /><span class="title">Auswertung</span></div>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div class="kicker">Bedarfsanalyse</div>
+          <button class="logout-btn" id="logout-btn" type="button">Abmelden</button>
+        </div>
+      </div>
+      ${renderStatCards()}
+      ${renderExportRow()}
+      ${insightHtml}
+      <div class="role-tabs">${tabs}</div>
+      ${detailHtml}
+      ${renderRecommendSection()}
+      ${renderNewsletterSection()}
+    `;
+
+    function selectRole(role){ activeRole = role; renderDashboard(); }
+    app.querySelectorAll('.role-tab').forEach(el => el.addEventListener('click', () => selectRole(el.dataset.role)));
+    app.querySelectorAll('.stat-card').forEach(el => el.addEventListener('click', () => selectRole(el.dataset.role)));
+    document.getElementById('logout-btn').addEventListener('click', logout);
+    const csvBtn = document.getElementById('export-csv-btn');
+    if(csvBtn) csvBtn.addEventListener('click', exportNewsletterCsv);
+    const xlsxBtn2 = document.getElementById('export-xlsx-btn2');
+    if(xlsxBtn2) xlsxBtn2.addEventListener('click', exportNewsletterExcel);
+    document.getElementById('export-csv-btn2').addEventListener('click', exportSubmissionsCsv);
+    document.getElementById('export-xlsx-btn').addEventListener('click', exportSubmissionsExcel);
+    document.getElementById('export-all-btn').addEventListener('click', exportAllExcel);
+  }
+
+  async function loadData(){
+    document.getElementById('app').innerHTML = `<div class="loading">Lädt Daten …</div>`;
+    const [subs, bonus, recs, news] = await Promise.all([
+      sb.from('submissions').select('*').order('created_at', { ascending:false }),
+      sb.from('bonus_answers').select('*').order('created_at', { ascending:false }),
+      sb.from('recommendations').select('*').order('created_at', { ascending:false }),
+      sb.from('newsletter_signups').select('*').not('confirmed_at', 'is', null).order('created_at', { ascending:false }),
+    ]);
+    data.submissions = subs.data || [];
+    data.bonus = bonus.data || [];
+    data.recommendations = recs.data || [];
+    data.newsletter = news.data || [];
+    renderDashboard();
+  }
+
+  /* ---------------- Login ---------------- */
+
+  function renderLogin(message){
+    const app = document.getElementById('app');
+    app.innerHTML = `
+      <div class="login-card">
+        <h1>MakerPort Auswertung</h1>
+        <p>Melde dich mit deinem Team-Zugang an.</p>
+        <div class="field"><label for="login-email">E-Mail</label><input type="email" id="login-email" autocomplete="username" /></div>
+        <div class="field"><label for="login-password">Passwort</label><input type="password" id="login-password" autocomplete="current-password" /></div>
+        <button class="link-ghost" id="forgot-link" type="button" ${configured ? '' : 'disabled'}>Passwort vergessen?</button>
+        <button class="btn-primary" id="login-btn" type="button" ${configured ? '' : 'disabled'}>Anmelden</button>
+        <div class="login-error" id="login-error">${message ? escapeHtml(message) : ''}</div>
+        <div class="login-info" id="login-info" style="display:none;"></div>
+        ${configured ? '' : `<div class="login-hint">Backend noch nicht konfiguriert — SUPABASE_URL / SUPABASE_ANON_KEY im Script oben eintragen.</div>`}
+        <div class="login-hint">Noch keinen Zugang? Im Supabase-Dashboard unter Authentication → Users anlegen lassen.</div>
+      </div>`;
+    if(message) document.getElementById('login-error').style.display = 'block';
+
+    document.getElementById('login-btn').addEventListener('click', doLogin);
+    document.getElementById('forgot-link').addEventListener('click', handleForgotPassword);
+    ['login-email','login-password'].forEach(id => {
+      document.getElementById(id).addEventListener('keydown', e => { if(e.key === 'Enter') doLogin(); });
+    });
+  }
+
+  async function doLogin(){
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    if(!email || !password) return;
+    const btn = document.getElementById('login-btn');
+    btn.disabled = true; btn.textContent = 'Anmelden …';
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if(error){
+      renderLogin('Anmeldung fehlgeschlagen: ' + error.message);
+      return;
+    }
+    loadData();
+  }
+
+  async function handleForgotPassword(){
+    const email = document.getElementById('login-email').value.trim();
+    const errorEl = document.getElementById('login-error');
+    const infoEl = document.getElementById('login-info');
+    errorEl.style.display = 'none';
+    infoEl.style.display = 'none';
+    if(!email){
+      errorEl.textContent = 'Bitte zuerst deine E-Mail-Adresse eingeben.';
+      errorEl.style.display = 'block';
+      return;
+    }
+    const link = document.getElementById('forgot-link');
+    link.disabled = true;
+    try {
+      await sb.auth.resetPasswordForEmail(email);
+    } catch(err) { /* absichtlich keine Fehlerdetails preisgeben */ }
+    infoEl.textContent = 'Falls ein Konto mit dieser E-Mail existiert, wurde ein Link zum Zurücksetzen des Passworts gesendet.';
+    infoEl.style.display = 'block';
+    link.disabled = false;
+  }
+
+  async function logout(){
+    if(sb) await sb.auth.signOut();
+    renderLogin();
+  }
+
+  async function init(){
+    if(!sb){
+      renderLogin();
+      return;
+    }
+    const { data: sessionData } = await sb.auth.getSession();
+    if(sessionData && sessionData.session){
+      loadData();
+    } else {
+      renderLogin();
+    }
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
