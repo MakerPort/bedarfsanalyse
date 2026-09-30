@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
 <title>MakerPort — Auswertung</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -192,8 +193,8 @@
 
   /* TODO: dieselben Werte wie in der Bedarfsanalyse-Seite eintragen
      (Supabase Dashboard → Project Settings → API) */
-  const SUPABASE_URL = 'https://YOUR-PROJECT-REF.supabase.co';
-  const SUPABASE_ANON_KEY = 'YOUR-ANON-PUBLIC-KEY';
+  const SUPABASE_URL = 'https://jgrduxxgxuoxzalafach.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_zm99FWWdNYmn431dGLUunA_kToTuBE5';
 
   const configured = SUPABASE_URL.indexOf('YOUR-PROJECT-REF') === -1;
   const sb = (window.supabase && configured) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
@@ -270,6 +271,7 @@
   const BONUS_GROUPS = {
     privat: [
       { key:'alter', label:'Alter', multiple:false, options:['unter 18','18–24','25–34','35–44','45–54','55+'] },
+      { key:'ort', label:'Wohnort', type:'text' },
       { key:'beruf', label:'Beruflicher Hintergrund', multiple:true, options:['Schüler:in / Student:in','Angestellte:r','Selbstständig / Freiberuflich','Unternehmer:in','Sonstiges'] },
       { key:'geschlecht', label:'Geschlecht', multiple:false, options:['Weiblich','Männlich','Divers','Keine Angabe'] },
       { key:'interessen', label:'Interessen', multiple:true, options:['Technologie & Programmierung','Design & Kreativität','Handwerk & Prototyping','Business & Gründung','Nachhaltigkeit','Sonstiges'] },
@@ -277,6 +279,7 @@
     ],
     fachkraft: [
       { key:'alter', label:'Alter', multiple:false, options:['unter 18','18–24','25–34','35–44','45–54','55+'] },
+      { key:'ort', label:'Arbeitsort', type:'text' },
       { key:'position', label:'Position', multiple:false, options:['Berufseinsteiger:in / Azubi','Fachkraft / Spezialist:in','Teamleitung','(Abteilungs-)Leitung','Geschäftsführung','Sonstiges'] },
       { key:'branche', label:'Branche', multiple:false, options:['Industrie / Produktion','IT / Software','Handel','Dienstleistung','Verwaltung','Tourismus','Landwirtschaft','Handwerk','Sonstiges'] },
       { key:'geschlecht', label:'Geschlecht', multiple:false, options:['Weiblich','Männlich','Divers','Keine Angabe'] },
@@ -285,6 +288,7 @@
     ],
     b2b: [
       { key:'unternehmensgroesse', label:'Unternehmensgröße', multiple:false, options:['1–9 Mitarbeitende','10–49 Mitarbeitende','50–249 Mitarbeitende','250+ Mitarbeitende'] },
+      { key:'ort', label:'Unternehmenssitz', type:'text' },
       { key:'branche', label:'Branche', multiple:false, options:['Industrie / Produktion','IT / Software','Handel','Dienstleistung','Verwaltung','Tourismus','Landwirtschaft','Handwerk','Sonstiges'] },
       { key:'position', label:'Position im Unternehmen', multiple:false, options:['Geschäftsführung','Innovationsmanagement','Personalabteilung','Sonstiges'] },
       { key:'quelle', label:'Wie hast du von uns erfahren?', multiple:false, options:['Social Media','Empfehlung','Suchmaschine','Veranstaltung / Messe','Presse / Blog','Sonstiges'] },
@@ -553,6 +557,25 @@
     return `<div class="panel"><h2>Fragebogen-Auswertung</h2><div class="panel-meta">${ROLE_LABELS[role]} · ${rows.length} Teilnahme${rows.length===1?'':'n'}</div>${blocks}</div>`;
   }
 
+  /* Freitext-Orte: Schreibweisen zusammenfassen ("wolgast", "Wolgast ") und nach Häufigkeit sortieren */
+  function renderPlaceList(rows, key){
+    const groups = {};
+    rows.forEach(r => {
+      const raw = r.answers && typeof r.answers[key] === 'string' ? r.answers[key].trim() : '';
+      if(!raw) return;
+      const norm = raw.toLocaleLowerCase('de-DE').replace(/\s+/g, ' ');
+      if(!groups[norm]) groups[norm] = { label: raw, count: 0 };
+      groups[norm].count++;
+    });
+    const list = Object.values(groups).sort((a,b) => b.count - a.count || a.label.localeCompare(b.label, 'de'));
+    if(!list.length) return `<div class="empty-note">Noch keine Angaben.</div>`;
+    const answered = list.reduce((n,x) => n + x.count, 0);
+    const counts = {};
+    list.slice(0, 15).forEach(x => { counts[x.label] = x.count; });
+    const more = list.length > 15 ? `<div class="empty-note" style="margin-top:8px;">+ ${list.length - 15} weitere Orte (vollständig im Excel-Export)</div>` : '';
+    return renderBars(counts, answered) + more;
+  }
+
   function renderBonusSection(role){
     const rows = data.bonus.filter(r => r.role === role);
     const groups = BONUS_GROUPS[role];
@@ -560,6 +583,7 @@
       return `<div class="panel"><h2>Zusatzangaben</h2><div class="panel-meta">${ROLE_LABELS[role]}</div><div class="empty-note">Noch keine Zusatzangaben für diese Rolle.</div></div>`;
     }
     const blocks = groups.map(g => {
+      if(g.type === 'text') return `<div class="question-block"><h3>${escapeHtml(g.label)}</h3>${renderPlaceList(rows, g.key)}</div>`;
       const counts = aggregateFlat(rows, g.key, g.options);
       return `<div class="question-block"><h3>${escapeHtml(g.label)}</h3>${g.multiple === false ? renderPie(counts) : renderBars(counts, rows.length)}</div>`;
     }).join('');
@@ -717,21 +741,21 @@
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(submissionsToRows(data.submissions)), 'Fragebögen');
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(submissionsToRows(data.bonus)), 'Zusatzangaben');
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data.recommendations.map(r => ({ id:r.id, session_id:r.session_id, created_at:r.created_at, recommend:r.recommend, feedback:r.feedback||'' }))), 'Empfehlungen');
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data.newsletter.map(r => ({ id:r.id, session_id:r.session_id, created_at:r.created_at, email:r.email, source:r.source||'' }))), 'Newsletter');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data.newsletter.map(r => ({ email:r.email, source:r.source||'', angemeldet_am:r.created_at, bestaetigt_am:r.confirmed_at }))), 'Newsletter');
     XLSX.writeFile(wb, 'makerport-rohdaten-komplett.xlsx');
   }
 
   function exportNewsletterCsv(){
     const rows = data.newsletter;
-    const header = ['email','source','created_at'];
+    const header = ['email','source','angemeldet_am','bestaetigt_am'];
     const lines = [header.join(',')].concat(
-      rows.map(r => [csvEscape(r.email), csvEscape(r.source), csvEscape(r.created_at)].join(','))
+      rows.map(r => [csvEscape(r.email), csvEscape(r.source), csvEscape(r.created_at), csvEscape(r.confirmed_at)].join(','))
     );
     downloadBlob(lines.join('\n'), 'makerport-newsletter-anmeldungen.csv', 'text/csv;charset=utf-8;');
   }
 
   function exportNewsletterExcel(){
-    const ws = XLSX.utils.json_to_sheet(data.newsletter.map(r => ({ email:r.email, source:r.source||'', created_at:r.created_at })));
+    const ws = XLSX.utils.json_to_sheet(data.newsletter.map(r => ({ email:r.email, source:r.source||'', angemeldet_am:r.created_at, bestaetigt_am:r.confirmed_at })));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Newsletter');
     XLSX.writeFile(wb, 'makerport-newsletter-anmeldungen.xlsx');
@@ -740,16 +764,16 @@
   function renderNewsletterSection(){
     const rows = data.newsletter;
     const rowsHtml = rows.length
-      ? rows.map(r => `<tr><td>${escapeHtml(r.email)}</td><td>${escapeHtml(r.source||'—')}</td><td>${fmtDate(r.created_at)}</td></tr>`).join('')
+      ? rows.map(r => `<tr><td>${escapeHtml(r.email)}</td><td>${escapeHtml(r.source||'—')}</td><td>${fmtDate(r.confirmed_at)}</td></tr>`).join('')
       : `<tr><td colspan="3"><span class="empty-note">Noch keine Newsletter-Anmeldungen.</span></td></tr>`;
     return `
       <div class="panel">
         <h2>Newsletter-Anmeldungen</h2>
-        <div class="panel-meta">${rows.length} Anmeldung${rows.length===1?'':'en'}</div>
+        <div class="panel-meta">${rows.length} bestätigte Anmeldung${rows.length===1?'':'en'} (Double-Opt-in)</div>
         ${rows.length ? `<div class="export-actions" style="margin-bottom:16px;"><button class="export-btn" id="export-csv-btn" type="button">Als CSV exportieren</button><button class="export-btn" id="export-xlsx-btn2" type="button">Als Excel exportieren</button></div>` : ''}
         <div class="table-wrap">
           <table class="data-table">
-            <thead><tr><th>E-Mail</th><th>Quelle</th><th>Datum</th></tr></thead>
+            <thead><tr><th>E-Mail</th><th>Quelle</th><th>Bestätigt am</th></tr></thead>
             <tbody>${rowsHtml}</tbody>
           </table>
         </div>
@@ -834,7 +858,7 @@
       sb.from('submissions').select('*').order('created_at', { ascending:false }),
       sb.from('bonus_answers').select('*').order('created_at', { ascending:false }),
       sb.from('recommendations').select('*').order('created_at', { ascending:false }),
-      sb.from('newsletter_signups').select('*').order('created_at', { ascending:false }),
+      sb.from('newsletter_signups').select('*').not('confirmed_at', 'is', null).order('created_at', { ascending:false }),
     ]);
     data.submissions = subs.data || [];
     data.bonus = bonus.data || [];
@@ -858,7 +882,6 @@
         <div class="login-error" id="login-error">${message ? escapeHtml(message) : ''}</div>
         <div class="login-info" id="login-info" style="display:none;"></div>
         ${configured ? '' : `<div class="login-hint">Backend noch nicht konfiguriert — SUPABASE_URL / SUPABASE_ANON_KEY im Script oben eintragen.</div>`}
-        <div class="login-hint">Noch keinen Zugang? Im Supabase-Dashboard unter Authentication → Users anlegen lassen.</div>
       </div>`;
     if(message) document.getElementById('login-error').style.display = 'block';
 

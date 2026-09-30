@@ -676,6 +676,7 @@
   .choice-btn:focus-visible{ outline:none; box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); }
 
   /* ---------- Newsletter opt-in (on thank-you screens) ---------- */
+  .finish-nav{ margin-top:32px; }
   .newsletter-block{ margin-top:28px; padding-top:24px; border-top:1px solid var(--line); }
   .check-row{
     display:inline-flex;
@@ -719,6 +720,21 @@
     min-width:200px;
   }
   .newsletter-email:focus{ outline:none; border-color:var(--accent); }
+  .text-field{
+    display:block; width:100%; max-width:360px; padding:10px 14px;
+    border:1.5px solid var(--line); border-radius:6px; background:var(--card);
+    font-family:inherit; font-size:0.95rem; color:var(--ink);
+  }
+  .text-field:focus{ outline:none; border-color:var(--accent); }
+  .text-field::placeholder{ color:#93A6BA; }
+  label.group-label{ display:block; }
+  .nl-toast{
+    position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom, 0px)); transform:translateX(-50%);
+    max-width:min(92vw, 460px); background:#21314a; color:#fff; padding:14px 20px; border-radius:8px;
+    font-size:0.95rem; line-height:1.45; box-shadow:0 6px 24px rgba(0,0,0,0.18); z-index:1000;
+    cursor:pointer; transition:opacity .35s ease;
+  }
+  .nl-toast-hide{ opacity:0; }
   .newsletter-success{
     margin-top:14px;
     font-size:0.9rem;
@@ -817,15 +833,17 @@
       <p>Diese Website wird als statische Seite über GitHub Pages (GitHub Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA, ein Unternehmen der Microsoft-Gruppe) ausgeliefert. Beim Aufruf der Seite verarbeitet GitHub technisch notwendige Verbindungsdaten (u. a. IP-Adresse, Datum und Uhrzeit des Zugriffs), um die Seite an deinen Browser ausliefern zu können. Mit GitHub haben wir die im GitHub-Kundenvertrag enthaltene Auftragsverarbeitungsvereinbarung (GitHub Data Protection Agreement) akzeptiert. Da die Auslieferung technisch über ein weltweites Auslieferungsnetzwerk erfolgt, kann es dabei zu einer Datenübermittlung in die USA kommen; GitHub stellt hierfür ein angemessenes Datenschutzniveau über die Standardvertragsklauseln der EU-Kommission sicher. Weitere Informationen findest du in der Datenschutzerklärung von GitHub.</p>
 
       <h3>Auftragsverarbeitung</h3>
-      <p>Mit allen im Folgenden genannten Dienstleistern (Supabase, Wix, Resend) haben wir im Rahmen der jeweiligen Kontoerstellung eine Auftragsverarbeitungsvereinbarung (AVV) nach Art. 28 DSGVO abgeschlossen und, soweit auswählbar, eine EU- bzw. deutsche Serverregion konfiguriert.</p>
+      <p>Mit allen im Folgenden genannten Dienstleistern (Supabase, Wix, All-Inkl.com) haben wir im Rahmen der jeweiligen Kontoerstellung eine Auftragsverarbeitungsvereinbarung (AVV) nach Art. 28 DSGVO abgeschlossen und, soweit auswählbar, eine EU- bzw. deutsche Serverregion konfiguriert.</p>
 
       <h3>Bedarfsanalyse-Fragebogen</h3>
-      <p>Deine Antworten im Fragebogen (Rolle, Anliegen, Themeninteressen, Zeitbudget etc.) werden ohne Namen, E-Mail-Adresse oder andere direkt identifizierende Angaben erfasst und anonymisiert in einer Datenbank bei Supabase gespeichert. Die Speicherung erfolgt in einer EU-Rechenzentrumsregion. Eine Rückverfolgung der Antworten auf deine Person ist uns technisch nicht möglich. Die Auswertung erfolgt ausschließlich zusammengefasst, um Angebote im MakerPort bedarfsgerecht zu gestalten.</p>
+      <p>Deine Antworten im Fragebogen (Rolle, Anliegen, Themeninteressen, Zeitbudget sowie freiwillig z. B. Alter oder Wohn-, Arbeits- bzw. Unternehmensort etc.) werden ohne Namen, E-Mail-Adresse oder andere direkt identifizierende Angaben erfasst und anonymisiert in einer Datenbank bei Supabase gespeichert. Die Speicherung erfolgt in einer EU-Rechenzentrumsregion. Eine Rückverfolgung der Antworten auf deine Person ist uns technisch nicht möglich. Die Auswertung erfolgt ausschließlich zusammengefasst, um Angebote im MakerPort bedarfsgerecht zu gestalten.</p>
       <p>Rechtsgrundlage ist unser berechtigtes Interesse (Art. 6 Abs. 1 lit. f DSGVO) an einer bedarfsorientierten Weiterentwicklung des MakerPort-Angebots. Da keine personenbezogenen Daten anfallen, ist eine Einwilligung hierfür nicht erforderlich.</p>
 
       <h3>Newsletter-Anmeldung</h3>
-      <p>Meldest du dich am Ende des Fragebogens freiwillig zum Newsletter an, speichern wir deine E-Mail-Adresse, um dir den MakerPort-Newsletter zuzusenden. Dies ist die einzige Stelle, an der wir personenbezogene Daten im engeren Sinn erheben. Der Versand erfolgt über Wix sowie Resend, jeweils mit Serverstandort in der EU; beide Dienstleister verarbeiten deine E-Mail-Adresse in unserem Auftrag auf Grundlage der mit ihnen abgeschlossenen AVV.</p>
-      <p>Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO). Du kannst diese Einwilligung jederzeit mit Wirkung für die Zukunft widerrufen, z. B. per E-Mail an info@makerport.de oder über den Abmeldelink im Newsletter. Deine E-Mail-Adresse wird bis zum Widerruf bzw. bis zum Wegfall des Zwecks gespeichert.</p>
+      <p>Meldest du dich am Ende des Fragebogens freiwillig zum Newsletter an, verarbeiten wir deine E-Mail-Adresse, um dir den MakerPort-Newsletter zuzusenden. Dies ist die einzige Stelle, an der wir personenbezogene Daten im engeren Sinn erheben. Deine E-Mail-Adresse wird getrennt von deinen Fragebogenantworten gespeichert; eine Verknüpfung beider ist nicht möglich.</p>
+      <p>Für die Anmeldung nutzen wir das Double-Opt-in-Verfahren: Nach deiner Eingabe erhältst du eine E-Mail mit einem Bestätigungslink. Erst wenn du diesen anklickst, wirst du in den Verteiler aufgenommen. Bestätigst du nicht innerhalb von 24 Stunden, verfällt der Link. Zum Nachweis deiner Einwilligung speichern wir die Zeitpunkte von Anmeldung und Bestätigung.</p>
+      <p>Dabei setzen wir folgende Dienstleister ein: Supabase (Speicherung der Anmeldung und des Bestätigungsnachweises, EU-Rechenzentrumsregion), All-Inkl.com – Neue Medien Münnich (Versand der Bestätigungs-E-Mail über unseren Mailserver, Serverstandort Deutschland) und Wix (Verwaltung des Newsletter-Verteilers und Versand des Newsletters; die Übertragung dorthin erfolgt durch uns manuell). Alle Dienstleister verarbeiten deine E-Mail-Adresse in unserem Auftrag auf Grundlage der mit ihnen abgeschlossenen AVV.</p>
+      <p>Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO). Du kannst diese Einwilligung jederzeit mit Wirkung für die Zukunft widerrufen, z. B. per E-Mail an info@makerport.de oder über den Abmeldelink im Newsletter. Deine E-Mail-Adresse wird bis zum Widerruf bzw. bis zum Wegfall des Zwecks gespeichert und anschließend bei allen genannten Dienstleistern gelöscht; lediglich ein Nachweis über die erteilte und widerrufene Einwilligung kann aufbewahrt werden, soweit dies zur Abwehr von Ansprüchen erforderlich ist. Nicht bestätigte Anmeldungen werden nach spätestens 30 Tagen gelöscht.</p>
 
       <h3>Cookies</h3>
       <p>Diese Website setzt keine Cookies zu Analyse- oder Marketingzwecken ein. Der Cookie-Hinweis am unteren Bildschirmrand speichert lediglich lokal in deinem Browser, dass du ihn gesehen hast (technisch notwendig gemäß § 25 Abs. 2 Nr. 2 TTDSG, keine Einwilligung erforderlich). Darüber hinaus werden nur technisch notwendige, temporäre Zustände im Browser gehalten, die beim Schließen der Seite verloren gehen.</p>
@@ -857,8 +875,84 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function(){
+
+  /* Supabase: Project URL + publishable/anon Key eintragen
+     (Supabase Dashboard → Project Settings → API Keys).
+     NIEMALS den secret/service_role Key verwenden – diese Datei ist öffentlich. */
+  const SUPABASE_URL = 'https://jgrduxxgxuoxzalafach.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_zm99FWWdNYmn431dGLUunA_kToTuBE5';
+
+  const sbConfigured = SUPABASE_URL.indexOf('YOUR-PROJECT-REF') === -1;
+  /* Auth-Optionen: keine Sitzung im Browser speichern – Besucher werden nie "eingeloggt" */
+  const sb = (window.supabase && sbConfigured) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession:false, autoRefreshToken:false, detectSessionInUrl:false, flowType:'implicit' }
+  }) : null;
+
+  function newSessionId(){
+    try { return crypto.randomUUID(); }
+    catch(e){ return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random()*16|0; return (c==='x'?r:(r&0x3|0x8)).toString(16); }); }
+  }
+
+  /* Fire-and-forget: Speichern darf den Ablauf für Besucher nie blockieren. */
+  async function save(table, row){
+    if(!sb) { console.warn('Supabase nicht konfiguriert – nicht gespeichert:', table, row); return; }
+    try {
+      const { error } = await sb.from(table).insert(row);
+      if(error) console.error('Speichern fehlgeschlagen (' + table + '):', error.message);
+    } catch(err){ console.error('Speichern fehlgeschlagen (' + table + '):', err); }
+  }
+
+  /* Newsletter: Double-Opt-in über Supabase Auth.
+     Supabase verschickt die Bestätigungsmail; erst nach Klick wird die Adresse
+     per Datenbank-Trigger in newsletter_signups übernommen. */
+  async function newsletterSignup(email, source){
+    if(!sb) return { ok:false, reason:'not_configured' };
+    try {
+      const { error } = await sb.auth.signInWithOtp({
+        email: email,
+        options: {
+          shouldCreateUser: true,
+          emailRedirectTo: location.origin + '/?newsletter=bestaetigt',
+          data: { newsletter: true, source: source }
+        }
+      });
+      if(error){
+        console.error('Newsletter-Anmeldung:', error.message);
+        return { ok:false, reason: error.status === 429 ? 'rate_limit' : 'error' };
+      }
+      return { ok:true };
+    } catch(err){ return { ok:false, reason:'network' }; }
+  }
+
+  /* Bestätigungslink aus der E-Mail: ?nl=<token> */
+  function showToast(text){
+    const t = document.createElement('div');
+    t.className = 'nl-toast';
+    t.setAttribute('role', 'status');
+    t.textContent = text;
+    document.body.appendChild(t);
+    setTimeout(() => { t.classList.add('nl-toast-hide'); setTimeout(() => t.remove(), 400); }, 7000);
+    t.addEventListener('click', () => t.remove());
+  }
+  (function handleNewsletterConfirm(){
+    const params = new URLSearchParams(location.search);
+    const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
+    const confirmed = params.get('newsletter') === 'bestaetigt';
+    const hashError = hash.get('error_code') || hash.get('error');
+    if(!confirmed && !hashError) return;
+    /* Parameter und Token sofort aus der Adresszeile entfernen */
+    history.replaceState(null, '', location.pathname);
+    if(hashError){
+      showToast(hashError === 'otp_expired'
+        ? 'Der Bestätigungslink ist abgelaufen. Bitte melde dich einfach erneut an.'
+        : 'Dieser Bestätigungslink ist ungültig oder wurde bereits verwendet.');
+    } else {
+      showToast('Danke! Deine Newsletter-Anmeldung ist bestätigt.');
+    }
+  })();
 
   /* TODO: replace with your real Google review link (Google Business Profile → "Get more reviews") */
   const GOOGLE_REVIEW_URL = 'https://www.google.com/search?sca_esv=d1654259742c7a2c&hl=de&authuser=0&sxsrf=APpeQntGlyGHJQrDA_78edcIJ0BbYc0kZQ:1790701160402&q=MakerPort+Stralsund&si=APenkKm7iecQ4G6P-TsbSMFKIQtv3EFIqRAFw-i8uEbk55Z-_-xNnM7AU8_QX1QYI8pRXsxD1JiooTZI2nx4ndgPfiWRLgIcTiTHJoITIgigwetCFy8Fmo0%3D&uds=AJ5uw18zeF8z_P7IQbfeR8tV0KKTibFX50J_Xgbx26yTFacqF5pcOmdlvULxAPLrCTXxPdEv68kfU6spniiu5c59NMIaF_7WUg-i0hRAjDARu48arrHrEwE&sa=X&ved=2ahUKEwjIy8HUoZSXAxWBVPEDHeJGORgQ3PALegQIHBAE&biw=1248&bih=583&dpr=2#sv=CAESzQEKuQEStgEKd0FKaVQ0dEstR2JsR0c5SF9aaENzSWxtbW9kdndOa1lkRmlWZTlHOFo1WUFDdm1TUmdyNlJXd2l4OVRnRGEtV01uS2ZJN1l0REtQcXRXNWVkR2JkM0NHUlhVSjFGa05HMDVEekY2eENQOVJRX1laUldJX285S0pJEhcxdTI3YXMyQUZiV0s3TllQNnZPdjJBVRoiQURzcjlmVFpfWkI3SnFTQjFZWkpMYTJoMlI1WkdQVnBvZxIEODA1MRoBMyoAMAA4AUAAGAAg8raU7g1KAhAB';
@@ -1029,6 +1123,7 @@
   const BONUS_GROUPS_PRIVAT = [
     { key:'alter', label:'Alter', layout:'chips', multiple:false,
       options:['unter 18','18–24','25–34','35–44','45–54','55+'] },
+    { key:'ort', label:'Wohnort', layout:'text', placeholder:'Stadt oder Gemeinde' },
     { key:'beruf', label:'Beruflicher Hintergrund', layout:'chips', multiple:true,
       options:['Schüler:in / Student:in','Angestellte:r','Selbstständig / Freiberuflich','Unternehmer:in','Sonstiges'] },
     { key:'geschlecht', label:'Geschlecht', layout:'chips', multiple:false,
@@ -1042,6 +1137,7 @@
   const BONUS_GROUPS_FACHKRAFT = [
     { key:'alter', label:'Alter', layout:'chips', multiple:false,
       options:['unter 18','18–24','25–34','35–44','45–54','55+'] },
+    { key:'ort', label:'Arbeitsort', layout:'text', placeholder:'Stadt oder Gemeinde' },
     { key:'position', label:'Position', layout:'chips', multiple:false,
       options:['Berufseinsteiger:in / Azubi','Fachkraft / Spezialist:in','Teamleitung','(Abteilungs-)Leitung','Geschäftsführung','Sonstiges'] },
     { key:'branche', label:'Branche', layout:'chips', multiple:false,
@@ -1057,6 +1153,7 @@
   const BONUS_GROUPS_BUSINESS = [
     { key:'unternehmensgroesse', label:'Unternehmensgröße', layout:'chips', multiple:false,
       options:['1–9 Mitarbeitende','10–49 Mitarbeitende','50–249 Mitarbeitende','250+ Mitarbeitende'] },
+    { key:'ort', label:'Unternehmenssitz', layout:'text', placeholder:'Stadt oder Gemeinde' },
     { key:'branche', label:'Branche', layout:'chips', multiple:false,
       options:['Industrie / Produktion','IT / Software','Handel','Dienstleistung','Verwaltung','Tourismus','Landwirtschaft','Handwerk','Sonstiges'] },
     { key:'position', label:'Deine Position im Unternehmen', layout:'chips', multiple:false,
@@ -1075,7 +1172,7 @@
 
   function setRole(roleId){
     const role = ROLES.find(r => r.id === roleId);
-    state = { stage:'form', role:roleId, path:role.path, step:0, answers:{}, bonus:{}, feedback:'' };
+    state = { stage:'form', role:roleId, path:role.path, step:0, answers:{}, bonus:{}, feedback:'', sessionId:newSessionId() };
     const a = ACCENTS[role.accent];
     document.documentElement.style.setProperty('--accent', a.base);
     document.documentElement.style.setProperty('--accent-dark', a.dark);
@@ -1157,6 +1254,7 @@
       state.step++;
       render();
     } else {
+      save('submissions', { session_id: state.sessionId, role: state.path, answers: state.answers });
       state.stage = 'success';
       render();
     }
@@ -1172,18 +1270,20 @@
     render();
   }
 
+  function goFinal(){ state.stage = 'final'; render(); window.scrollTo(0, 0); }
   function goBonus(){ state.stage = 'bonus'; render(); }
   function skipBonus(){ state.cameFromBonus = false; state.stage = 'recommend'; render(); }
-  function bonusNext(){ state.cameFromBonus = true; state.stage = 'recommend'; render(); }
+  function bonusNext(){ if(!state.savedBonus){ state.savedBonus = true; save('bonus_answers', { session_id: state.sessionId, role: state.path, answers: state.bonus }); } state.cameFromBonus = true; state.stage = 'recommend'; render(); }
   function bonusBack(){ state.stage = 'success'; render(); }
   function recommendBack(){ state.stage = state.cameFromBonus ? 'bonus' : 'success'; render(); }
   function chooseRecommend(value){
     state.recommend = value;
+    if(value === 'ja' && !state.savedRec){ state.savedRec = true; save('recommendations', { session_id: state.sessionId, recommend: 'ja' }); }
     state.stage = value === 'ja' ? 'thanks-google' : 'feedback';
     render();
   }
   function feedbackBack(){ state.stage = 'recommend'; render(); }
-  function submitFeedback(){ state.stage = 'thanks-feedback'; render(); }
+  function submitFeedback(){ if(!state.savedRec){ state.savedRec = true; save('recommendations', { session_id: state.sessionId, recommend: 'nein', feedback: (state.feedback || '').trim() || null }); } state.stage = 'thanks-feedback'; render(); }
 
   function toggleNewsletter(){
     const btn = document.getElementById('newsletter-toggle-btn');
@@ -1222,10 +1322,28 @@
     const email = input.value.trim();
     if(!email){ input.focus(); return; }
     if(!consentBtn.classList.contains('selected')){ return; }
-    document.getElementById('newsletter-form').hidden = true;
-    document.getElementById('newsletter-consent-row').hidden = true;
-    document.getElementById('newsletter-submit-row').hidden = true;
-    document.getElementById('newsletter-success').hidden = false;
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ input.focus(); return; }
+    const submitBtn = document.getElementById('newsletter-submit');
+    const successEl = document.getElementById('newsletter-success');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Wird gesendet …';
+    /* bewusst OHNE session_id: E-Mail darf nicht mit den anonymen Antworten verknüpfbar sein */
+    newsletterSignup(email, state.path || null).then(res => {
+      if(res.ok){
+        document.getElementById('newsletter-form').hidden = true;
+        document.getElementById('newsletter-consent-row').hidden = true;
+        document.getElementById('newsletter-submit-row').hidden = true;
+        successEl.textContent = 'Fast geschafft! Wir haben dir eine E-Mail geschickt – bitte bestätige darin deine Anmeldung.';
+        successEl.hidden = false;
+      } else {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Anmelden';
+        successEl.textContent = res.reason === 'rate_limit'
+          ? 'Gerade gehen sehr viele Anmeldungen ein. Bitte versuche es in einigen Minuten erneut.'
+          : 'Das hat leider nicht geklappt. Bitte versuche es später noch einmal.';
+        successEl.hidden = false;
+      }
+    });
   }
 
   function escapeHtml(str){
@@ -1307,6 +1425,10 @@
   function renderGroupsBlock(groups, store, keyPrefix){
     return groups.map(g => {
       const fullKey = keyPrefix + g.key;
+      if(g.layout === 'text'){
+        const val = typeof store[fullKey] === 'string' ? store[fullKey] : '';
+        return `<div class="group-block"><label class="group-label" for="txt-${fullKey}">${g.label}</label><input type="text" class="text-field" id="txt-${fullKey}" data-text-group="${fullKey}" maxlength="80" autocomplete="off" placeholder="${escapeHtml(g.placeholder||'')}" value="${escapeHtml(val)}"></div>`;
+      }
       if(g.layout === 'chips'){
         const chips = g.options.map(opt => {
           const selected = (store[fullKey] || []).includes(opt);
@@ -1460,6 +1582,23 @@
         <div class="panel-head">Danke für dein Feedback!</div>
         <p class="panel-sub">Wir nehmen jede Rückmeldung ernst und nutzen sie, um den MakerPort laufend für dich weiterzuentwickeln.</p>
         ${renderNewsletterBlock()}
+        <div class="nav finish-nav">
+          <span></span>
+          <button class="btn btn-next" id="finish-btn" type="button">Weiter</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderFinal(){
+    return `
+      ${renderTopbar()}
+      <div class="panel-card">
+        <div class="panel-head">Danke für dein Engagement!</div>
+        <p class="panel-sub">Du hast uns mit deinen Angaben sehr geholfen. Schau gern auf unserer Website vorbei und entdecke, was im MakerPort gerade passiert.</p>
+        <div class="cta-row">
+          <a class="btn-cta" href="https://www.makerport.de" target="_blank" rel="noopener">Zur MakerPort-Website</a>
+        </div>
       </div>
     `;
   }
@@ -1474,6 +1613,10 @@
           <a class="btn-cta" id="google-review-link" href="${GOOGLE_REVIEW_URL}" target="_blank" rel="noopener">Auf Google bewerten</a>
         </div>
         ${renderNewsletterBlock()}
+        <div class="nav finish-nav">
+          <span></span>
+          <button class="btn btn-next" id="finish-btn" type="button">Weiter</button>
+        </div>
       </div>
     `;
   }
@@ -1540,6 +1683,12 @@
           el.addEventListener('click', () => handleGroupClick(state.bonus, g.key, el, g, panel));
         });
       });
+      panel.querySelectorAll('[data-text-group]').forEach(el => {
+        el.addEventListener('input', () => {
+          const v = el.value.replace(/\s+/g, ' ').trim();
+          if(v) state.bonus[el.dataset.textGroup] = v; else delete state.bonus[el.dataset.textGroup];
+        });
+      });
       document.getElementById('back-btn').addEventListener('click', bonusBack);
       document.getElementById('next-btn').addEventListener('click', bonusNext);
 
@@ -1563,6 +1712,10 @@
       document.getElementById('newsletter-consent-btn').addEventListener('click', toggleNewsletterConsent);
       document.getElementById('newsletter-consent-link').addEventListener('click', (e) => modalOpeners.datenschutz(e));
       document.getElementById('newsletter-submit').addEventListener('click', submitNewsletter);
+      document.getElementById('finish-btn').addEventListener('click', goFinal);
+
+    } else if(state.stage === 'final'){
+      app.innerHTML = renderFinal();
 
     } else if(state.stage === 'thanks-google'){
       app.innerHTML = renderThanksGoogle();
@@ -1576,6 +1729,7 @@
       document.getElementById('newsletter-consent-btn').addEventListener('click', toggleNewsletterConsent);
       document.getElementById('newsletter-consent-link').addEventListener('click', (e) => modalOpeners.datenschutz(e));
       document.getElementById('newsletter-submit').addEventListener('click', submitNewsletter);
+      document.getElementById('finish-btn').addEventListener('click', goFinal);
     }
 
     const wm = document.getElementById('wordmark-btn');
