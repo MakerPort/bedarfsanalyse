@@ -471,26 +471,44 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 
   /* ---------------- Insight (Ableitung) ---------------- */
 
-  function renderRoleInsight(rows, roleLabel){
-    if(rows.length < 3) return ''; // zu wenig Daten für eine belastbare Aussage
-    const topThema = topOption(rows, 'themen');
-    const topFormat = topOption(rows, 'zeitbudget__format');
-    const topHaeufigkeit = topOption(rows, 'zeitbudget__haeufigkeit');
-    if(!topThema || !topFormat || !topHaeufigkeit) return '';
-    const comboCount = rows.filter(r => {
-      const a = r.answers || {};
-      return (a.themen||[]).includes(topThema) && (a.zeitbudget__format||[]).includes(topFormat) && (a.zeitbudget__haeufigkeit||[]).includes(topHaeufigkeit);
-    }).length;
-    const pct = Math.round(comboCount / rows.length * 100);
-    if(pct < 15) return '';
+  function insightBox(text){
     return `
       <div class="insight-box">
         <div class="insight-icon">💡</div>
         <div>
           <div class="insight-title">Ableitung</div>
-          <div class="insight-text">Es würde sich folgendes Format lohnen: <strong>${escapeHtml(topFormat)}</strong> zum Thema „${escapeHtml(topThema)}" — ${escapeHtml(topHaeufigkeit)}. Übereinstimmung mit <strong>${pct}%</strong> der ${escapeHtml(roleLabel)} (${comboCount} von ${rows.length}).</div>
+          <div class="insight-text">${text}</div>
         </div>
       </div>`;
+  }
+
+  function renderRoleInsight(rows, roleLabel){
+    const MIN = 3;
+    if(rows.length < MIN){
+      return insightBox(`Für <strong>${escapeHtml(roleLabel)}</strong> liegen erst ${rows.length} von mindestens ${MIN} Fragebögen vor. Sobald genug Antworten da sind, erscheint hier eine Empfehlung.`);
+    }
+    const topThema = topOption(rows, 'themen');
+    const topFormat = topOption(rows, 'zeitbudget__format');
+    const topHaeufigkeit = topOption(rows, 'zeitbudget__haeufigkeit');
+    if(!topThema || !topFormat || !topHaeufigkeit){
+      const parts = [];
+      if(topThema) parts.push(`Thema „${escapeHtml(topThema)}“`);
+      if(topFormat) parts.push(`Format <strong>${escapeHtml(topFormat)}</strong>`);
+      if(topHaeufigkeit) parts.push(escapeHtml(topHaeufigkeit));
+      return insightBox(parts.length
+        ? `Bei den ${escapeHtml(roleLabel)} am häufigsten gewählt: ${parts.join(', ')}. Für eine vollständige Empfehlung fehlen noch Angaben zu Thema, Format oder Häufigkeit.`
+        : `Die bisherigen Fragebögen der ${escapeHtml(roleLabel)} enthalten noch keine Angaben zu Thema, Format und Häufigkeit.`);
+    }
+    const comboCount = rows.filter(r => {
+      const a = r.answers || {};
+      const has = (v, x) => Array.isArray(v) ? v.includes(x) : v === x;
+      return has(a.themen, topThema) && has(a.zeitbudget__format, topFormat) && has(a.zeitbudget__haeufigkeit, topHaeufigkeit);
+    }).length;
+    const pct = Math.round(comboCount / rows.length * 100);
+    if(pct < 15){
+      return insightBox(`Noch keine klare gemeinsame Präferenz der ${escapeHtml(roleLabel)}. Einzeln am beliebtesten: Thema „${escapeHtml(topThema)}“, Format <strong>${escapeHtml(topFormat)}</strong>, ${escapeHtml(topHaeufigkeit)} – diese Kombination wählen aber nur ${pct}% (${comboCount} von ${rows.length}).`);
+    }
+    return insightBox(`Es würde sich folgendes Format lohnen: <strong>${escapeHtml(topFormat)}</strong> zum Thema „${escapeHtml(topThema)}“ — ${escapeHtml(topHaeufigkeit)}. Übereinstimmung mit <strong>${pct}%</strong> der ${escapeHtml(roleLabel)} (${comboCount} von ${rows.length}).`);
   }
 
   function renderGesamtInsight(){
